@@ -1,0 +1,1 @@
+type NavigationType = 'traverse' | 'push' | 'replace';

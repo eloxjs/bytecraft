@@ -1,0 +1,1 @@
+type MiddlewareFunction = (request: AppRequest, next: MiddlewareNext) => Promise<void>

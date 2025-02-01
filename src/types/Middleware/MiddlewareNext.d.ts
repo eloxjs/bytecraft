@@ -1,0 +1,1 @@
+type MiddlewareNext = () => Promise<void>
