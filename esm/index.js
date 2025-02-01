@@ -918,6 +918,87 @@ function Link(anchorOrUrl, metadata = null, optional) {
     return anchorElement;
 }
 
+class StateNavigator extends EventManager {
+    constructor() {
+        super();
+        this.navigableStates = [];
+        this.lastState = null;
+        this.lastState = window.history.state;
+        window.addEventListener('popstate', this.handleStateChange.bind(this));
+    }
+    handleStateChange(event) {
+        const currentState = event.state;
+        if (this.lastState) {
+            this.deactivateState(this.lastState);
+        }
+        if (currentState) {
+            this.activateState(currentState);
+        }
+        this.lastState = currentState;
+        this.dispatchEvent('statechange');
+    }
+    navigateToState(state, onExitCallback, onEnterCallback) {
+        const navigationState = {
+            state,
+            uri: window.location.href,
+            action: {
+                onEnter: onEnterCallback,
+                onExit: onExitCallback
+            },
+            parent: null,
+            isActive: false
+        };
+        const navigableStateConfigurator = {
+            onEnter: function (onEnterCallback) {
+                navigationState.action.onEnter = onEnterCallback || undefined;
+                return navigableStateConfigurator;
+            },
+            onExit: function (onExitCallback) {
+                navigationState.action.onExit = onExitCallback;
+                return navigableStateConfigurator;
+            },
+            parent: function (parentState) {
+                navigationState.parent = parentState;
+                return navigableStateConfigurator;
+            }
+        };
+        this.navigableStates.push(navigationState);
+        window.history.pushState(state, document.title, navigationState.uri);
+        this.lastState = history.state;
+        this.activateState(state);
+        return navigableStateConfigurator;
+    }
+    activateState(state) {
+        const navigationState = this.navigableStates.find(route => route.state === state);
+        if (!navigationState)
+            return false;
+        if (navigationState.isActive)
+            return;
+        const onEnterCallback = navigationState.action.onEnter;
+        navigationState.isActive = true;
+        if (onEnterCallback)
+            onEnterCallback();
+    }
+    deactivateState(state) {
+        const navigationState = this.navigableStates.find(route => route.state === state);
+        if (!navigationState)
+            return false;
+        const onExitCallback = navigationState.action.onExit;
+        navigationState.isActive = false;
+        onExitCallback();
+        if (!navigationState.action.onEnter) {
+            this.removeState(state);
+        }
+    }
+    removeState(state) {
+        const stateIndex = this.navigableStates.findIndex(route => route.state === state);
+        if (stateIndex >= 0) {
+            this.navigableStates.splice(stateIndex, 1);
+        }
+    }
+}
+var stateNavigator = new StateNavigator();
+
 function sanitizeSegment(segment) {
     if (!segment)
         return '';
@@ -977,7 +1058,7 @@ var path = /*#__PURE__*/Object.freeze({
 
 let activeTheme = appConfig.themeList[0];
 let themeSetInLocalStorage = window.localStorage.getItem('theme');
-class _App extends EventManager {
+const App = new class App extends EventManager {
     constructor() {
         var _a, _b;
         super();
@@ -1017,7 +1098,6 @@ class _App extends EventManager {
             this.dispatchEvent('changetheme', { currentTheme: theme, oldTheme });
         }
     }
-}
-const App = new _App();
+};
 
-export { EventManager, ExceptionRenderer, Link, Router, App as default, path };
+export { EventManager, ExceptionRenderer, Link, Router, stateNavigator as StateNavigator, App as default, path };

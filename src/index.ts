@@ -2,11 +2,13 @@ import EventManager from "./services/event-manager";
 import ExceptionRenderer from "./services/exception-renderer";
 import Router from "./services/router";
 import appConfig from "./config/app-config";
+import { AppEventMap } from "./types/EventManager/App";
+import StateNavigator from './services/state-navigator';
 
 let activeTheme:typeof appConfig.themeList[number] = appConfig.themeList[0];
 let themeSetInLocalStorage = window.localStorage.getItem('theme') as typeof appConfig.themeList[number];
 
-class _App extends EventManager {
+const App = new class App extends EventManager {
     config = appConfig;
     public csrfToken:string = (document.querySelector('meta[name="csrf-token"]')! as HTMLElement)?.getAttribute?.('content')||'';
 
@@ -50,13 +52,11 @@ class _App extends EventManager {
     }
 }
 
-// interface App {
-//     addEventListener<EventType extends keyof AppEventMap>(eventType: EventType, listener: (event: AppEventMap[EventType]) => void): void;
-//     removeEventListener<EventType extends keyof AppEventMap>(eventType: EventType, listener: (event: AppEventMap[EventType]) => void): void;
-//     dispatchEvent<EventType extends keyof AppEventMap>(eventType: EventType, event?:AppEventMap[EventType]) : void;
-// }
-
-const App = new _App();
+interface App {
+    addEventListener<EventType extends keyof AppEventMap>(eventType: EventType, listener: (event: AppEventMap[EventType]) => void): void;
+    removeEventListener<EventType extends keyof AppEventMap>(eventType: EventType, listener: (event: AppEventMap[EventType]) => void): void;
+    dispatchEvent<EventType extends keyof AppEventMap>(eventType: EventType, event?:AppEventMap[EventType]) : void;
+}
 
 export * from "./services/router";
 export * as path from "./utils/path";
@@ -64,5 +64,6 @@ export {
     App as default,
     EventManager,
     Router,
-    ExceptionRenderer
+    ExceptionRenderer,
+    StateNavigator
 }
