@@ -26,9 +26,9 @@ npm install git+https://github.com/ByteCraftJS/bytecraft.git
 import App, { Router } from "bytecraft"
 import {Anchor} from "bytecraft/dom"
 
-ByteCraft.name = 'Your App Name';
+App.name = 'Your App Name';
 
-ByteCraft.config.directoryPaths.controllerDirectory = '/app/controllers';
+App.config.directoryPaths.controllerDirectory = '/app/controllers';
 
 Router.addRoute('/', 'dashboard-controller').id('dashboard');
 Router.addRoute('/login', 'login-controller').id('login');
