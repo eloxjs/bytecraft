@@ -1,4 +1,4 @@
-declare interface Metadata<BodyType = any> {
+declare interface PageData<BodyType = any> {
     ok: boolean;
     status: HTTP_STATUS_CODE;
     statusText: HttpStatusCodes[HTTP_STATUS_CONSTANT][text];

@@ -4,6 +4,7 @@ import Router from "./services/router";
 import appConfig from "./config/app-config";
 import { AppEventMap } from "./types/EventManager/App";
 import StateNavigator from './services/state-navigator';
+import TemplateEngine from "./utils/template-engine";
 
 let activeTheme:typeof appConfig.themeList[number] = appConfig.themeList[0];
 let themeSetInLocalStorage = window.localStorage.getItem('theme') as typeof appConfig.themeList[number];

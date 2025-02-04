@@ -1,4 +1,4 @@
-# ByteCraft Reactive hooks
+# Reactive hooks
 
 ## **`useObject`** - Hook for Stateful Object Properties
 

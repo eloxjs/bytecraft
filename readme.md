@@ -45,6 +45,14 @@ For more details, visit the [documentation](docs/readme.md).
 - [Template Engine](docs/template-engine.md)
 - [Future Goals](docs/future-goals.md)
 
+## 🌱 Future Goals
+Check out our [Future Goals](docs/future-goals.md) for upcoming features, including:
+- JSX Syntax Support
+- Code Splitting and Component Management
+- In-built CMS-like system for admins to easily edit and manage static content.
+- Internationalization (i18n) support
+- Dynamic theme management
+
 ## 🤝 Contributing
 We welcome contributions! Please check our [Contributing Guide](CONTRIBUTING.md) before submitting a pull request.
 

@@ -371,28 +371,10 @@ var __awaiter$2 = (undefined && undefined.__awaiter) || function (thisArg, _argu
 };
 function ExceptionHandlerMiddleware(request, next) {
     return __awaiter$2(this, undefined, undefined, function* () {
-        var _a;
-        let exit = false;
-        if (!request.metadata && request.route.hasPageData) {
-            yield fetch(request.url, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            }).then((response) => {
-                return response.json();
-            }).then(jsonData => {
-                request.metadata = jsonData;
-            }).catch(() => {
-                ExceptionRenderer.renderException('EXPECTATION_FAILED');
-                exit = true;
-            });
+        if (request.pagedata && !request.pagedata.ok) {
+            return ExceptionRenderer.renderException(request.pagedata.status, request.pagedata.body);
         }
-        if ((_a = request.metadata) === null || _a === undefined ? undefined : _a.redirect) {
-            return Router.redirect(request.metadata.redirect, Object.assign(Object.assign({}, request.metadata), { redirect: null }));
-        }
-        if (!exit)
-            yield next();
+        yield next();
     });
 }
 
@@ -405,12 +387,30 @@ var __awaiter$1 = (undefined && undefined.__awaiter) || function (thisArg, _argu
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-function PageMetaDataMiddleware(request, next) {
+function PageDataMiddleware(request, next) {
     return __awaiter$1(this, undefined, undefined, function* () {
-        if (request.metadata && !request.metadata.ok) {
-            return ExceptionRenderer.renderException(request.metadata.status, request.metadata.body);
+        var _a;
+        let exit = false;
+        if (!request.pagedata && request.route.hasPageData) {
+            yield fetch(request.url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).then((response) => {
+                return response.json();
+            }).then(jsonData => {
+                request.pagedata = jsonData;
+            }).catch(() => {
+                ExceptionRenderer.renderException('EXPECTATION_FAILED');
+                exit = true;
+            });
         }
-        yield next();
+        if ((_a = request.pagedata) === null || _a === undefined ? undefined : _a.redirect) {
+            return Router.redirect(request.pagedata.redirect, Object.assign(Object.assign({}, request.pagedata), { redirect: null }));
+        }
+        if (!exit)
+            yield next();
     });
 }
 
@@ -433,7 +433,7 @@ const Router = new class Router {
         this.routeMiddlewares = {};
         this.defaultFetchPageData = false;
         window.addEventListener('popstate', this.handleBrowserNavigation.bind(this));
-        this.useGlobalMiddleware(PageMetaDataMiddleware, ExceptionHandlerMiddleware);
+        this.useGlobalMiddleware(PageDataMiddleware, ExceptionHandlerMiddleware);
     }
     handleBrowserNavigation() {
         const currentPath = window.location.pathname;
@@ -442,7 +442,7 @@ const Router = new class Router {
             return;
         this.processCurrentRoute(null, 'traverse');
     }
-    navigate(destination, metadata = null, optional) {
+    navigate(destination, pagedata = null, optional) {
         if (appConfig.isSinglePageApplication) {
             const uniqueState = this.generateRouteId() + new Date().getTime().toString();
             window.history.pushState(uniqueState, document.title, destination);
@@ -451,9 +451,9 @@ const Router = new class Router {
             window.location.href = destination;
             return;
         }
-        this.processCurrentRoute(metadata, 'push', optional);
+        this.processCurrentRoute(pagedata, 'push', optional);
     }
-    redirect(destination, metadata = null, optional) {
+    redirect(destination, pagedata = null, optional) {
         let targetRoute = this.findRouteByPath(destination);
         let routeId = targetRoute ? targetRoute.id : this.generateRouteId();
         if (appConfig.isSinglePageApplication) {
@@ -462,7 +462,7 @@ const Router = new class Router {
         else {
             window.location.replace(destination);
         }
-        this.processCurrentRoute(metadata, 'replace', optional);
+        this.processCurrentRoute(pagedata, 'replace', optional);
     }
     hasRoute(id) {
         return Boolean(this.findRouteById(id));
@@ -628,20 +628,20 @@ const Router = new class Router {
         return false;
     }
     processCurrentRoute() {
-        return __awaiter(this, arguments, undefined, function* (metadata = null, navigationType = 'push', optional) {
+        return __awaiter(this, arguments, undefined, function* (pagedata = null, navigationType = 'push', optional) {
             var _a;
             const routeToLoad = this.findRouteByPath();
             if (!routeToLoad) {
-                ExceptionRenderer.renderException('NOT_FOUND', (_a = window.PageMetaData) === null || _a === undefined ? undefined : _a.body);
-                window.PageMetaData = null;
+                ExceptionRenderer.renderException('NOT_FOUND', (_a = window.$PageData) === null || _a === undefined ? undefined : _a.body);
+                window.$PageData = null;
                 this.previousState = null;
                 return undefined;
             }
-            yield this.loadRouteData(routeToLoad, metadata, navigationType, optional);
+            yield this.loadRouteData(routeToLoad, pagedata, navigationType, optional);
         });
     }
     loadRouteData(route_1) {
-        return __awaiter(this, arguments, undefined, function* (route, metadata = null, navigationType = 'push', optional) {
+        return __awaiter(this, arguments, undefined, function* (route, pagedata = null, navigationType = 'push', optional) {
             const routeParameters = this.extractRouteParams(route.path, window.location.pathname, route.paramPatterns);
             const hasSameRoute = this.previousState ? this.previousState.route.id === route.id : false;
             const previousStateContext = this.previousState === null ? null : this.createStateContext(this.previousState);
@@ -654,7 +654,9 @@ const Router = new class Router {
                 optional,
                 previousRequest: previousStateContext
             });
-            yield this.processRouteLoading(route, Object.assign(currentStateContext, { metadata }), routeParameters);
+            if (!(previousStateContext === null || previousStateContext === undefined ? undefined : previousStateContext.isChildOf(route.id))) {
+                yield this.processRouteLoading(route, Object.assign(currentStateContext, { pagedata }), routeParameters);
+            }
             this.previousState = {
                 route: currentStateContext.route,
                 params: routeParameters,
@@ -682,18 +684,18 @@ const Router = new class Router {
             route: state.route,
             url: state.url,
             isParentOf: (targetRouteId) => {
-                let targetRoute = this.findRouteById(targetRouteId);
+                const targetRoute = this.findRouteById(targetRouteId);
                 if (!targetRoute)
                     return false;
-                let targetRouteChildren = this.getChildRoutes(targetRoute);
-                return !!targetRouteChildren.find(r => r.id === state.route.id);
+                const targetRouteChildren = this.getChildRoutes(state.route);
+                return !!targetRouteChildren.find(r => r.id === targetRoute.id);
             },
             isChildOf: (targetRouteId) => {
                 let targetRoute = this.findRouteById(targetRouteId);
                 if (!targetRoute)
                     return false;
-                const targetRouteParents = this.getRouteParents(targetRoute);
-                return !!targetRouteParents.find(r => r.id === state.route.id);
+                const targetRouteParents = this.getRouteParents(state.route);
+                return !!targetRouteParents.find(r => r.id === targetRoute.id);
             },
             parents: () => this.getRouteParents(state.route),
             isSameRoute: !!state.isSameRoute,
@@ -771,6 +773,8 @@ const Router = new class Router {
         return __awaiter(this, arguments, undefined, function* (route, actionType = 'load') {
             const actionDescriptor = actionType === 'load' ? route.actions.load : (route.actions.unload || route.actions.load);
             const defaultFunctionName = actionType;
+            if (actionType === 'unload' && typeof actionDescriptor === 'function' && !route.actions.unload)
+                return null;
             if (typeof actionDescriptor === 'function')
                 return actionDescriptor;
             if (!actionDescriptor)
@@ -850,7 +854,7 @@ const Router = new class Router {
     getMiddlewaresForRoute(route) {
         const globalMiddlewares = this.globalMiddlewares.filter((middleware) => {
             if (route.hasPageData === false || (route.hasPageData === null && !this.defaultFetchPageData))
-                return middleware !== PageMetaDataMiddleware;
+                return middleware !== PageDataMiddleware;
             return true;
         });
         return [...globalMiddlewares, ...(this.routeMiddlewares[route.id] || [])];
@@ -901,7 +905,7 @@ const Router = new class Router {
         });
     }
 };
-function Link(anchorOrUrl, metadata = null, optional) {
+function Link(anchorOrUrl, pagedata = null, optional) {
     const anchorElement = typeof anchorOrUrl === 'string' ? document.createElement('a') : anchorOrUrl;
     if (typeof anchorOrUrl === 'string') {
         anchorElement.href = anchorOrUrl;
@@ -913,7 +917,7 @@ function Link(anchorOrUrl, metadata = null, optional) {
         if (event.ctrlKey || event.metaKey)
             return;
         event.preventDefault();
-        Router.navigate(anchorElement.href, metadata, optional);
+        Router.navigate(anchorElement.href, pagedata, optional);
     }
     return anchorElement;
 }

@@ -1,6 +1,6 @@
 import appConfig from "../config/app-config";
 import ExceptionHandlerMiddleware from "../middlewares/exception-handler";
-import PageMetaDataMiddleware from "../middlewares/page-metadata";
+import PageDataMiddleware from "../middlewares/page-data";
 import ExceptionRenderer from "./exception-renderer";
 
 const Router = new class Router {
@@ -51,7 +51,7 @@ const Router = new class Router {
     constructor() {
         window.addEventListener('popstate', this.handleBrowserNavigation.bind(this));
 
-        this.useGlobalMiddleware(PageMetaDataMiddleware, ExceptionHandlerMiddleware);
+        this.useGlobalMiddleware(PageDataMiddleware, ExceptionHandlerMiddleware);
 
         // this.historyEntries.push({
         //     url: window.location.href,
@@ -108,9 +108,9 @@ const Router = new class Router {
      * Navigates to the given path in the application.
      * 
      * @param destination - The target path for navigation.
-     * @param metadata - Optional data or parameters for the route.
+     * @param pagedata - Optional data or parameters for the route.
      */
-    public navigate(destination: string, metadata:LoadRequest['metadata'] = null, optional?:LoadRequest['optional']) {
+    public navigate(destination: string, pagedata:LoadRequest['pagedata'] = null, optional?:LoadRequest['optional']) {
         // Avoid re-pushing the same path to the history
         // if(this.previousState && this.doURLsMatch(this.previousState.url, new URL(destination, window.location.href))) return;
 
@@ -126,16 +126,16 @@ const Router = new class Router {
             return;
         }
 
-        this.processCurrentRoute(metadata, 'push', optional);
+        this.processCurrentRoute(pagedata, 'push', optional);
     }
 
     /**
      * Redirects to the given path in the application, replacing the current history entry.
      * 
      * @param destination - The target path for redirection.
-     * @param metadata - Optional data or parameters for the route.
+     * @param pagedata - Optional data or parameters for the route.
      */
-    public redirect(destination: string, metadata:LoadRequest['metadata'] = null, optional?:LoadRequest['optional']) {
+    public redirect(destination: string, pagedata:LoadRequest['pagedata'] = null, optional?:LoadRequest['optional']) {
         let targetRoute = this.findRouteByPath(destination);
         let routeId = targetRoute ? targetRoute.id : this.generateRouteId();
 
@@ -145,7 +145,7 @@ const Router = new class Router {
             window.location.replace(destination);
         }
 
-        this.processCurrentRoute(metadata, 'replace', optional);
+        this.processCurrentRoute(pagedata, 'replace', optional);
     }
 
     /**
@@ -443,31 +443,31 @@ const Router = new class Router {
     /**
      * Loads a route based on the current window location or a provided path.
      * 
-     * @param metadata - Optional route metadata.
+     * @param pagedata - Optional route pagedata.
      * @param navigationType - The type of state action (push, traverse, or replace).
      */
-    public async processCurrentRoute(metadata: LoadRequest['metadata'] = null, navigationType: NavigationType = 'push', optional?:LoadRequest['optional']) {
+    public async processCurrentRoute(pagedata: LoadRequest['pagedata'] = null, navigationType: NavigationType = 'push', optional?:LoadRequest['optional']) {
         // const currentURL = new URL(window.location.href);
         const routeToLoad = this.findRouteByPath();
 
         if (!routeToLoad) {
-            ExceptionRenderer.renderException('NOT_FOUND', (window as any).PageMetaData?.body);
-            (window as any).PageMetaData = null;
+            ExceptionRenderer.renderException('NOT_FOUND', (window as any).$PageData?.body);
+            (window as any).$PageData = null;
             this.previousState = null;
             return void 0;
         }
 
-        await this.loadRouteData(routeToLoad, metadata, navigationType, optional);
+        await this.loadRouteData(routeToLoad, pagedata, navigationType, optional);
     }
 
     /**
      * Loads the given route data and manages route transitions.
      * 
      * @param route - The target route to be loaded.
-     * @param metadata - Optional route metadata.
+     * @param pagedata - Optional route pagedata.
      * @param navigationType - The type of state action (push, pop, or replace).
      */
-    private async loadRouteData(route: Route, metadata: LoadRequest['metadata'] = null, navigationType: NavigationType = 'push', optional?:LoadRequest['optional']) {
+    private async loadRouteData(route: Route, pagedata: LoadRequest['pagedata'] = null, navigationType: NavigationType = 'push', optional?:LoadRequest['optional']) {
         const routeParameters = this.extractRouteParams(route.path, window.location.pathname, route.paramPatterns);
         const hasSameRoute = this.previousState ? this.previousState.route.id === route.id : false;
         const previousStateContext = this.previousState === null ? null : this.createStateContext(this.previousState);
@@ -481,7 +481,9 @@ const Router = new class Router {
             previousRequest: previousStateContext
         });
 
-        await this.processRouteLoading(route, Object.assign(currentStateContext, {metadata}), routeParameters);
+        if(!previousStateContext?.isChildOf(route.id)) {
+            await this.processRouteLoading(route, Object.assign(currentStateContext, {pagedata}), routeParameters);
+        }
 
         this.previousState = {
             route: currentStateContext.route,
@@ -518,23 +520,23 @@ const Router = new class Router {
      * @param isSameRoute - Indicates if the current state route matches the previous state route.
      * @returns The state context.
      */
-    private createStateContext(state: RouteStateData): Omit<LoadRequest, 'metadata'> {
+    private createStateContext(state: RouteStateData): Omit<LoadRequest, 'pagedata'> {
         const context = {
             params: state.params || this.extractRouteParams(state.route.path, window.location.pathname, state.route.paramPatterns),
             queryParams: new URLSearchParams(state.url.search),
             route: state.route,
             url: state.url,
             isParentOf: (targetRouteId: Route['id']) => {
-                let targetRoute = this.findRouteById(targetRouteId);
+                const targetRoute = this.findRouteById(targetRouteId);
                 if(!targetRoute) return false;
-                let targetRouteChildren = this.getChildRoutes(targetRoute);
-                return !!targetRouteChildren.find(r => r.id === state.route.id);
+                const targetRouteChildren = this.getChildRoutes(state.route);
+                return !!targetRouteChildren.find(r => r.id === targetRoute.id);
             },
             isChildOf: (targetRouteId: Route['id']) => {
                 let targetRoute = this.findRouteById(targetRouteId);
                 if(!targetRoute) return false;
-                const targetRouteParents = this.getRouteParents(targetRoute);
-                return !!targetRouteParents.find(r => r.id === state.route.id);
+                const targetRouteParents = this.getRouteParents(state.route);
+                return !!targetRouteParents.find(r => r.id === targetRoute.id);
             },
             parents: () => this.getRouteParents(state.route),
             isSameRoute: !!state.isSameRoute,
@@ -554,7 +556,7 @@ const Router = new class Router {
      * @param currentRequest - The current state context.
      * @returns An array of routes to be unloaded.
      */
-    private determineRoutesToUnload(previousRequest: Omit<LoadRequest, "metadata">, currentRequest: Omit<LoadRequest, "metadata">): Route[] {
+    private determineRoutesToUnload(previousRequest: Omit<LoadRequest, "pagedata">, currentRequest: Omit<LoadRequest, "pagedata">): Route[] {
         const allPreviousRoutes = [previousRequest.route, ...previousRequest.parents()];
 
         if (currentRequest.isParentOf(previousRequest.route.id)) {
@@ -700,6 +702,7 @@ const Router = new class Router {
         const actionDescriptor = actionType === 'load' ? route.actions.load : (route.actions.unload || route.actions.load);
         const defaultFunctionName = actionType;
     
+        if(actionType === 'unload' && typeof actionDescriptor === 'function' && !route.actions.unload) return null;
         if (typeof actionDescriptor === 'function') return actionDescriptor;
         if (!actionDescriptor) return null;
         // if(actionDescriptor === true) actionDescriptor = route.actions.load;
@@ -916,7 +919,7 @@ const Router = new class Router {
      */
     private getMiddlewaresForRoute(route: Route): Middleware[] {
         const globalMiddlewares = this.globalMiddlewares.filter((middleware) => {
-            if(route.hasPageData === false || (route.hasPageData === null && !this.defaultFetchPageData)) return middleware !== PageMetaDataMiddleware;
+            if(route.hasPageData === false || (route.hasPageData === null && !this.defaultFetchPageData)) return middleware !== PageDataMiddleware;
             return true;
         })
 
@@ -993,7 +996,7 @@ const Router = new class Router {
     }
 }
 
-function Link(anchorOrUrl: HTMLAnchorElement|string, metadata: any = null, optional?: any): HTMLAnchorElement {
+function Link(anchorOrUrl: HTMLAnchorElement|string, pagedata: any = null, optional?: any): HTMLAnchorElement {
     const anchorElement = typeof anchorOrUrl === 'string' ? document.createElement('a') : anchorOrUrl;
     if(typeof anchorOrUrl === 'string') {
         anchorElement.href = anchorOrUrl;
@@ -1016,7 +1019,7 @@ function Link(anchorOrUrl: HTMLAnchorElement|string, metadata: any = null, optio
         event.preventDefault();
 
         // Use the custom router for navigation.
-        Router.navigate(anchorElement.href, metadata, optional);
+        Router.navigate(anchorElement.href, pagedata, optional);
     }
 
     return anchorElement;

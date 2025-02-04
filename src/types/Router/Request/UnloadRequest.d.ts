@@ -8,5 +8,5 @@ type UnloadRequest = {
     parents: () => Route[];
     isSameRoute: boolean;
     navigationType: NavigationType;
-    processingRoute: Omit<LoadRequest, 'metadata'>
+    processingRoute: Omit<LoadRequest, 'pagedata'>
 };

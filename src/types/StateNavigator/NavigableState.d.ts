@@ -1,4 +1,4 @@
-// Represents a dynamic route with associated metadata
+// Represents a dynamic route with associated pagedata
 declare interface NavigableState {
     state: string;
     uri: string;
