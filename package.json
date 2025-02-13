@@ -11,11 +11,11 @@
     },
     "./dom": {
       "require": "./cjs/dom.cjs",
-      "import": "./esm/utils/dom.js"
+      "import": "./esm/dom.js"
     },
     "./template-engine": {
       "require": "./cjs/template-engine.cjs",
-      "import": "./esm/utils/template-engine.js"
+      "import": "./esm/template-engine.js"
     },
     "./hooks": {
       "require": "./cjs/hooks.cjs",

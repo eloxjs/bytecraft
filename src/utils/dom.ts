@@ -215,6 +215,12 @@ const Ul = elementFactory('ul');
 const Var = elementFactory('var');
 const Video = elementFactory('video');
 const Wbr = elementFactory('wbr');
+const Fragment = (...nodeList:Node[]) => {
+    return append(
+        document.createDocumentFragment(),
+        ...nodeList
+    )
+}
 
 
 // ===================================
@@ -233,7 +239,7 @@ const Wbr = elementFactory('wbr');
  * 
  * @returns - The parent element with the newly appended child elements or text nodes.
  */
-function append<ParentType extends Element>(targetParent: ParentType, ...childNodes: (Node | Text | string)[]): ParentType {
+function append<ParentType extends Element|DocumentFragment>(targetParent: ParentType, ...childNodes: (Node | Text | string)[]): ParentType {
     if (!targetParent) return targetParent;
 
     const childArray = Array.isArray(childNodes) ? childNodes : [childNodes];
@@ -594,6 +600,7 @@ export {
     Var,
     Video,
     Wbr,
+    Fragment,
 
     // Element manipulation utilities
     append,

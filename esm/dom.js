@@ -205,6 +205,9 @@ const Ul = elementFactory('ul');
 const Var = elementFactory('var');
 const Video = elementFactory('video');
 const Wbr = elementFactory('wbr');
+const Fragment = (...nodeList) => {
+    return append(document.createDocumentFragment(), ...nodeList);
+};
 function append(targetParent, ...childNodes) {
     if (!targetParent)
         return targetParent;
@@ -318,4 +321,4 @@ function findPropertyDescriptor(obj, prop) {
     return null;
 }
 
-export { Abbr, Address, Anchor, Area, Article, Aside, AudioElement, B, Base, Bdi, Bdo, Blockquote, Body, Br, Button, Canvas, Caption, Cite, Code, Col, Colgroup, Data, Datalist, Dd, Del, Details, Dfn, Dialog, Div, Dl, Dt, Em, Embed, Fieldset, Figcaption, Figure, Footer, Form, H1, H2, H3, H4, H5, H6, Head, Header, Hgroup, Hr, Html, I, Iframe, Img, Input, Ins, Kbd, Label, Legend, Li, LinkElement, Main, MapElement, Mark, Menu, Meta, Meter, Nav, Noscript, ObjectElement, Ol, Optgroup, OptionElement, Output, P, Picture, Pre, Progress, Q, Rp, Rt, Ruby, S, Samp, Script, Section, Select, Small, Source, Span, Strong, Style, StylesheetLink, Sub, Summary, Sup, TBody, TFoot, THead, Table, Td, Template, TextNode, Textarea, Th, Time, Title, Tr, Track, U, Ul, Var, Video, Wbr, addClass, append, applyStyle, assembleDOM, clearContent, createElement, innerHTML, innerText, removeClass, setAttribute, setValue };
+export { Abbr, Address, Anchor, Area, Article, Aside, AudioElement, B, Base, Bdi, Bdo, Blockquote, Body, Br, Button, Canvas, Caption, Cite, Code, Col, Colgroup, Data, Datalist, Dd, Del, Details, Dfn, Dialog, Div, Dl, Dt, Em, Embed, Fieldset, Figcaption, Figure, Footer, Form, Fragment, H1, H2, H3, H4, H5, H6, Head, Header, Hgroup, Hr, Html, I, Iframe, Img, Input, Ins, Kbd, Label, Legend, Li, LinkElement, Main, MapElement, Mark, Menu, Meta, Meter, Nav, Noscript, ObjectElement, Ol, Optgroup, OptionElement, Output, P, Picture, Pre, Progress, Q, Rp, Rt, Ruby, S, Samp, Script, Section, Select, Small, Source, Span, Strong, Style, StylesheetLink, Sub, Summary, Sup, TBody, TFoot, THead, Table, Td, Template, TextNode, Textarea, Th, Time, Title, Tr, Track, U, Ul, Var, Video, Wbr, addClass, append, applyStyle, assembleDOM, clearContent, createElement, innerHTML, innerText, removeClass, setAttribute, setValue };

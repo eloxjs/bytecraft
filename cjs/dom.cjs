@@ -207,6 +207,9 @@ const Ul = elementFactory('ul');
 const Var = elementFactory('var');
 const Video = elementFactory('video');
 const Wbr = elementFactory('wbr');
+const Fragment = (...nodeList) => {
+    return append(document.createDocumentFragment(), ...nodeList);
+};
 function append(targetParent, ...childNodes) {
     if (!targetParent)
         return targetParent;
@@ -358,6 +361,7 @@ exports.Figcaption = Figcaption;
 exports.Figure = Figure;
 exports.Footer = Footer;
 exports.Form = Form;
+exports.Fragment = Fragment;
 exports.H1 = H1;
 exports.H2 = H2;
 exports.H3 = H3;
