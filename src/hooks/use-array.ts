@@ -1,3 +1,15 @@
+/**
+ * 🚧 UNDER DEVELOPMENT - DO NOT USE YET 🚧
+ *
+ * This hook is still in the development phase and is not ready for use.
+ * The implementation is incomplete and subject to major changes.
+ * 
+ * If you're reviewing this code, please note that it is a work in progress.
+ * Feel free to provide suggestions, but do not judge the final quality based on this version.
+ * 
+ * More updates coming soon!
+ */
+
 class ArrayCalculateChanges {
     
     static calculateChanges(targetArray:any, operation:any, args:any, result:any) {
