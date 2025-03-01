@@ -251,3 +251,4 @@ function isPropertyConfigurable(targetObject, propertyKey) {
 
 exports.useArray = useArray;
 exports.useObject = useObject;
+exports.useObjectProp = defineStatefulProperty;

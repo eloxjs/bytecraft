@@ -1,4 +1,4 @@
 import useArray from "./use-array";
-import useObject from "./use-object";
+import useObject, {useObjectProp} from "./use-object";
 
-export {useArray, useObject};
+export {useArray, useObject, useObjectProp};

@@ -247,4 +247,4 @@ function isPropertyConfigurable(targetObject, propertyKey) {
     return descriptor ? Boolean(descriptor.configurable) : false;
 }
 
-export { useArray, useObject };
+export { useArray, useObject, defineStatefulProperty as useObjectProp };
