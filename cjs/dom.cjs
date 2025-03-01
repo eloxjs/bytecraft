@@ -92,7 +92,7 @@ function elementFactory(tagName) {
         const config = isPlainObject(configOrNode) ? configOrNode : undefined;
         const element = createElement(`${tagName}${selector}`, config);
         const childNodes = [...((!configOrNode || selector || config) ? [] : [configOrNode]), ...nodes];
-        element.append(...childNodes);
+        append(element, ...childNodes);
         return element;
     };
 }
@@ -214,7 +214,13 @@ function append(targetParent, ...childNodes) {
     if (!targetParent)
         return targetParent;
     const childArray = Array.isArray(childNodes) ? childNodes : [childNodes];
-    targetParent.append(...childArray);
+    const filteredChildArray = childArray
+        .filter((item) => {
+        return item !== undefined && item !== null && typeof item !== 'boolean';
+    }).map((item) => {
+        return typeof item === 'number' ? item.toString() : item;
+    });
+    targetParent.append(...filteredChildArray);
     return targetParent;
 }
 function assembleDOM(root) {

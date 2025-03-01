@@ -98,7 +98,7 @@ function elementFactory<TagName extends keyof HTMLElementTagNameMap>(tagName: Ta
         const config = isPlainObject(configOrNode) ? configOrNode as HTMLElementConfigMap[TagName] : undefined;
         const element = createElement(`${tagName}${selector}`, config);
         const childNodes = [...((!configOrNode || selector || config) ? [] : [configOrNode as Node]), ...nodes];
-        element.append(...childNodes);
+        append(element, ...childNodes);
 
         return element as HTMLElementTagNameMap[TagName];
     };
@@ -239,11 +239,18 @@ const Fragment = (...nodeList:Node[]) => {
  * 
  * @returns - The parent element with the newly appended child elements or text nodes.
  */
-function append<ParentType extends Element|DocumentFragment>(targetParent: ParentType, ...childNodes: (Node | Text | string)[]): ParentType {
+function append<ParentType extends Element|DocumentFragment>(targetParent: ParentType, ...childNodes: (Node | Text | string | boolean | undefined | null | number)[]): ParentType {
     if (!targetParent) return targetParent;
 
     const childArray = Array.isArray(childNodes) ? childNodes : [childNodes];
-    targetParent.append(...childArray);
+    const filteredChildArray = childArray
+        .filter((item) => {
+            return item !== undefined && item !== null && typeof item !== 'boolean'
+        }).map((item) => {
+            return typeof item === 'number' ? item.toString() : item
+        });
+
+    targetParent.append(...filteredChildArray);
 
     return targetParent;
 }
