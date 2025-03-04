@@ -1,10 +1,9 @@
-import EventManager from "./services/event-manager";
-import ExceptionRenderer from "./services/exception-renderer";
-import Router from "./services/router";
+import EventManager from "./router/event-manager";
+import ExceptionRenderer from "./router/exception-renderer";
+import Router from "./router/router";
 import appConfig from "./config/app-config";
 import { AppEventMap } from "./types/EventManager/App";
-import StateNavigator from './services/state-navigator';
-import TemplateEngine from "./utils/template-engine";
+import StateNavigator from './router/state-navigator';
 
 // Holds the currently active theme, initialized with the first theme from appConfig.
 let activeTheme:typeof appConfig.themeList[number] = appConfig.themeList[0];
@@ -85,7 +84,7 @@ interface App {
     dispatchEvent<EventType extends keyof AppEventMap>(eventType: EventType, event?:AppEventMap[EventType]) : void;
 }
 
-export * from "./services/router";
+export * from "./router/router";
 export * as path from "./utils/path";
 export {
     App as default,

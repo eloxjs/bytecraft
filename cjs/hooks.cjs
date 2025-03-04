@@ -196,7 +196,7 @@ function useArray(array, arrayHandler) {
 }
 
 const objectStateMap = new WeakMap();
-function defineStatefulProperty(object, propertyKey, valueHandler) {
+function defineStatefulProperty(object, propertyKey, valueHandler, defaultExecute = true) {
     if (!objectStateMap.has(object)) {
         objectStateMap.set(object, { stateChangeHandlers: {} });
     }
@@ -208,18 +208,20 @@ function defineStatefulProperty(object, propertyKey, valueHandler) {
             set: (value) => {
                 var _a;
                 if (value !== propertyValue) {
+                    const previousValue = propertyValue;
                     propertyValue = value;
-                    (_a = objectStateMap.get(object).stateChangeHandlers[propertyKey]) === null || _a === undefined ? undefined : _a.forEach(handler => handler());
+                    (_a = objectStateMap.get(object).stateChangeHandlers[propertyKey]) === null || _a === undefined ? undefined : _a.forEach(handler => handler(previousValue));
                 }
             }
         });
     }
-    valueHandler(object[propertyKey]);
+    if (defaultExecute)
+        valueHandler(object[propertyKey], object[propertyKey]);
     if (!(propertyKey in objectStateMap.get(object).stateChangeHandlers)) {
         objectStateMap.get(object).stateChangeHandlers[propertyKey] = [];
     }
-    function stateChangeHandler() {
-        valueHandler(object[propertyKey]);
+    function stateChangeHandler(previousValue) {
+        valueHandler(object[propertyKey], previousValue);
     }
     objectStateMap.get(object).stateChangeHandlers[propertyKey].push(stateChangeHandler);
     return {

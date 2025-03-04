@@ -4,7 +4,7 @@ const inputFiles = [
         filename: "index"
     },
     {
-        path: "./dist/utils/dom.js",
+        path: "./dist/dom/index.js",
         filename: "dom"
     },
     {

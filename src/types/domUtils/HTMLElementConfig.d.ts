@@ -136,17 +136,17 @@ interface ParentNodeConfig extends NodeConfig {
     // #FUNCTION prepend(...nodes: (Node | string)[]): void;
 }
 
-interface ElementCustomConfig {
-    attributes: Record<string, string>;
-    '[]': Record<string, string>;
-    '.': string;
-    '#': string;
-    'html': string;
+interface ElementCustomConfig<DOMState> {
+    attributes: Record<string, string> | DOMState;
+    '[]': Record<string, string> | DOMState;
+    '.': string | DOMState;
+    '#': string | DOMState;
+    'html': string | DOMState;
 }
 
-interface HTMLElementCustomConfig {
-    'text': string;
-    'numberOfLines': number;
+interface HTMLElementCustomConfig<DOMState> {
+    'text': string | DOMState;
+    'numberOfLines': number | DOMState;
 }
 
 

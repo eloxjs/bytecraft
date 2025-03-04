@@ -9,7 +9,7 @@ const objectStateMap: WeakMap<PlainObject, ObjectState> = new WeakMap();
  * @param propertyKey - The key/name of the property to be defined.
  * @param valueHandler - A function to handle the value of the property.
  */
-function defineStatefulProperty<TargetObject extends PlainObject, PropertyKey extends keyof TargetObject>(object: TargetObject, propertyKey: PropertyKey, valueHandler: ValueHandler<TargetObject[PropertyKey]>) {
+function defineStatefulProperty<TargetObject extends PlainObject, PropertyKey extends keyof TargetObject>(object: TargetObject, propertyKey: PropertyKey, valueHandler: ValueHandler<TargetObject[PropertyKey]>, defaultExecute:boolean = true) {
     // Initialize the object state if not already present.
     if (!objectStateMap.has(object)) {
         objectStateMap.set(object, { stateChangeHandlers: {} });
@@ -28,15 +28,16 @@ function defineStatefulProperty<TargetObject extends PlainObject, PropertyKey ex
             set: (value) => {
                 // If the new value is different, update it and call the state change handlers.
                 if (value !== propertyValue) {
+                    const previousValue = propertyValue;
                     propertyValue = value;
-                    objectStateMap.get(object)!.stateChangeHandlers[propertyKey]?.forEach(handler => handler());
+                    objectStateMap.get(object)!.stateChangeHandlers[propertyKey]?.forEach(handler => handler(previousValue));
                 }
             }
         });
     }
 
     // Execute the valueHandler for the current property value.
-    valueHandler(object[propertyKey]);
+    if(defaultExecute) valueHandler(object[propertyKey], object[propertyKey]);
 
     // Initialize the state change handlers for the property if not present.
     if (!(propertyKey in objectStateMap.get(object)!.stateChangeHandlers)) {
@@ -44,8 +45,8 @@ function defineStatefulProperty<TargetObject extends PlainObject, PropertyKey ex
     }
 
     // Add the provided valueHandler to the state change handlers for the property.
-    function stateChangeHandler() {
-        valueHandler(object[propertyKey]);
+    function stateChangeHandler(previousValue:any) {
+        valueHandler(object[propertyKey], previousValue);
     }
 
     objectStateMap.get(object)!.stateChangeHandlers[propertyKey].push(stateChangeHandler);

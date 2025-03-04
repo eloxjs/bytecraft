@@ -5,85 +5,237 @@ function isPlainObject(obj) {
         Object.getPrototypeOf(obj) === Object.prototype;
 }
 
-function convertToKebabCase(str) {
-    return str
-        .replace(/(?<!^)([A-Z])/g, '-$1')
-        .toLowerCase();
+const objectStateMap = new WeakMap();
+function defineStatefulProperty(object, propertyKey, valueHandler, defaultExecute = true) {
+    if (!objectStateMap.has(object)) {
+        objectStateMap.set(object, { stateChangeHandlers: {} });
+    }
+    if (!(propertyKey in object) || isPropertyConfigurable(object, propertyKey)) {
+        let propertyValue = object[propertyKey];
+        delete object[propertyKey];
+        Object.defineProperty(object, propertyKey, {
+            get: () => propertyValue,
+            set: (value) => {
+                var _a;
+                if (value !== propertyValue) {
+                    const previousValue = propertyValue;
+                    propertyValue = value;
+                    (_a = objectStateMap.get(object).stateChangeHandlers[propertyKey]) === null || _a === undefined ? undefined : _a.forEach(handler => handler(previousValue));
+                }
+            }
+        });
+    }
+    if (defaultExecute)
+        valueHandler(object[propertyKey], object[propertyKey]);
+    if (!(propertyKey in objectStateMap.get(object).stateChangeHandlers)) {
+        objectStateMap.get(object).stateChangeHandlers[propertyKey] = [];
+    }
+    function stateChangeHandler(previousValue) {
+        valueHandler(object[propertyKey], previousValue);
+    }
+    objectStateMap.get(object).stateChangeHandlers[propertyKey].push(stateChangeHandler);
+    return {
+        delete: function () {
+            let handlers = objectStateMap.get(object).stateChangeHandlers[propertyKey];
+            let handlerIndex = handlers.indexOf(stateChangeHandler);
+            if (handlerIndex >= 0)
+                handlers.splice(handlerIndex, 1);
+        }
+    };
+}
+function isPropertyConfigurable(targetObject, propertyKey) {
+    const descriptor = Object.getOwnPropertyDescriptor(targetObject, propertyKey);
+    return descriptor ? Boolean(descriptor.configurable) : false;
+}
+
+class DOMState {
+    constructor(id, trackList, callback) {
+        this.id = id;
+        this.trackList = trackList;
+        this.callback = callback;
+    }
+    init(callback) {
+        const values = [];
+        const previousValues = [];
+        this.trackList.forEach((trackItem, index) => {
+            Object.entries(trackItem).forEach(([trackItemKey, trackItemObject]) => {
+                values.push(trackItemObject[trackItemKey]);
+                defineStatefulProperty(trackItemObject, trackItemKey, (value, previousValue) => {
+                    values[index] = value;
+                    previousValues[index] = previousValue;
+                    callback(values, previousValues);
+                }, false);
+            });
+        });
+        callback(values, previousValues);
+    }
+}
+function bindState(trackList, callback) {
+    return new DOMState(null, trackList, callback);
+}
+
+function append(targetParent, ...childNodes) {
+    if (!targetParent)
+        return targetParent;
+    const filteredChildArray = childNodes
+        .map((item) => {
+        return typeof item === 'number' ? item.toString() : item;
+    }).map((item) => {
+        if (item instanceof DOMState) {
+            let node = null;
+            item.init((values, previousValues) => {
+                const result = item.callback(values, previousValues);
+                if (result === undefined || result === null || typeof result === 'boolean') {
+                    const comment = document.createComment("placeholder");
+                    if (node !== null)
+                        node.replaceWith(comment);
+                    node = comment;
+                }
+                else if (typeof result === 'string' || typeof result === 'number') {
+                    const text = new Text(result.toString());
+                    if (node !== null)
+                        node.replaceWith(text);
+                    node = text;
+                }
+                else {
+                    if (node !== null)
+                        node.replaceWith(result);
+                    node = result;
+                }
+            });
+            return node;
+        }
+        else {
+            return item;
+        }
+    })
+        .filter((item) => {
+        return item !== undefined && item !== null && typeof item !== 'boolean';
+    });
+    targetParent.append(...filteredChildArray);
+    return targetParent;
+}
+
+function findPropertyDescriptor(obj, prop) {
+    while (obj) {
+        const descriptor = Object.getOwnPropertyDescriptor(obj, prop);
+        if (descriptor) {
+            return descriptor;
+        }
+        obj = Object.getPrototypeOf(obj);
+    }
+    return null;
+}
+function parseTagDescriptor(descriptor) {
+    const tagMatches = descriptor.match(/^(\w+)/);
+    const classMatches = descriptor.matchAll(/\.([\w-]+)(?![^\[]*\])/g);
+    const idMatches = descriptor.matchAll(/#([\w\s-]+)/g);
+    const attrMatches = descriptor.matchAll(/\[([\w-]+)(?:=("|')?(.*?)\2?)?\]/g);
+    const classes = Array.from(classMatches).map(match => match[1]);
+    const ids = Array.from(idMatches).map(match => match[1].trim());
+    const attrs = {};
+    for (const match of attrMatches) {
+        attrs[match[1]] = match[3] || '';
+    }
+    return {
+        tag: (tagMatches ? tagMatches[1] : 'div'),
+        class: classes,
+        id: ids,
+        attrs
+    };
 }
 
 function createElement(descriptor, config) {
     const { tag, class: classes, id, attrs } = parseTagDescriptor(descriptor);
     const element = document.createElement(tag);
+    if (classes.length > 0) {
+        element.classList.add(...classes);
+    }
+    if (id.length > 0) {
+        const validId = id.find(id => id && !/\s/.test(id));
+        if (validId)
+            element.id = validId;
+    }
+    for (const [attr, value] of Object.entries(attrs)) {
+        element.setAttribute(attr, value);
+    }
     const customConfig = {
         attributes(value) {
-            Object.entries(value).forEach(([key, value]) => {
-                element.setAttribute(key, value);
+            applyDynamicOrStatic(value, element, (el, val) => {
+                Object.entries(val).forEach(([key, val]) => {
+                    el.setAttribute(key, val);
+                });
             });
         },
         '[]': (value) => {
             customConfig.attributes(value);
         },
         '.': (value) => {
-            element.className = value;
+            applyDynamicOrStatic(value, element, (el, val) => {
+                el.className = val;
+            });
         },
         '#': (value) => {
-            element.id = value;
+            applyDynamicOrStatic(value, element, (el, val) => {
+                el.id = val;
+            });
         },
         html(value) {
-            element.innerHTML = value;
+            applyDynamicOrStatic(value, element, (el, val) => {
+                el.innerHTML = val;
+            });
         },
         text(value) {
-            element.innerText = value;
+            applyDynamicOrStatic(value, element, (el, val) => {
+                el.textContent = val;
+            });
         },
         style(value) {
-            Object.entries(value).forEach(([propertyName, propertyValue]) => {
-                element.style[propertyName] = propertyValue;
+            applyDynamicOrStatic(value, element, (el, val) => {
+                Object.entries(val).forEach(([property, value]) => {
+                    el.style.setProperty(property.startsWith('--') ? property :
+                        property.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`), value);
+                });
             });
         },
         fallbackSrc(fallbackImageSource) {
-            if (fallbackImageSource) {
-                element.addEventListener('error', handleImageError);
-            }
-            function handleImageError() {
-                element.removeEventListener('error', handleImageError);
-                if (fallbackImageSource) {
+            if (element instanceof HTMLImageElement && fallbackImageSource) {
+                const handleError = () => {
+                    element.removeEventListener('error', handleError);
                     element.src = fallbackImageSource;
-                }
+                };
+                element.addEventListener('error', handleError);
             }
         },
-        numberOfLines(value) {
-            element.setAttribute('fixed-line-text', '');
-            element.style.cssText += `-webkit-line-clamp: ${value}; height: ${value * 1.2}em; line-height: ${value * 1.2};`;
-        }
     };
-    if (classes.length > 0) {
-        element.classList.add(...classes);
-    }
-    if (id.length > 0) {
-        element.id = id.join(' ');
-    }
-    for (const [attr, value] of Object.entries(attrs)) {
-        element.setAttribute(attr, value);
-    }
     if (config) {
         Object.entries(config).forEach(([key, value]) => {
-            var _a;
-            if (key in customConfig)
-                return customConfig[key](value);
-            if ((_a = findPropertyDescriptor(element, key)) === null || _a === undefined ? undefined : _a.set) {
-                element[key] = value;
+            if (key in customConfig) {
+                customConfig[key](value);
+                return;
+            }
+            const descriptor = findPropertyDescriptor(element, key);
+            if (descriptor === null || descriptor === undefined ? undefined : descriptor.set) {
+                applyDynamicOrStatic(value, element, (el, val) => {
+                    el[key] = val;
+                });
             }
         });
     }
     return element;
 }
-function TextNode(data) {
-    return new Text(data);
+function applyDynamicOrStatic(value, element, setter) {
+    if (value instanceof DOMState) {
+        value.init((values, previousValues) => {
+            const result = value.callback(values, previousValues);
+            setter(element, result);
+        });
+    }
+    else {
+        setter(element, value);
+    }
 }
-function clearContent(targetNode) {
-    targetNode.textContent = '';
-    return targetNode;
-}
+
 function elementFactory(tagName) {
     return function (configOrNode, ...nodes) {
         const selector = typeof configOrNode === 'string' ? configOrNode : '';
@@ -208,49 +360,19 @@ const Wbr = elementFactory('wbr');
 const Fragment = (...nodeList) => {
     return append(document.createDocumentFragment(), ...nodeList);
 };
-function append(targetParent, ...childNodes) {
-    if (!targetParent)
-        return targetParent;
-    const childArray = Array.isArray(childNodes) ? childNodes : [childNodes];
-    const filteredChildArray = childArray
-        .filter((item) => {
-        return item !== undefined && item !== null && typeof item !== 'boolean';
-    }).map((item) => {
-        return typeof item === 'number' ? item.toString() : item;
-    });
-    targetParent.append(...filteredChildArray);
-    return targetParent;
+function TextNode(data) {
+    return new Text(data);
 }
-function assembleDOM(root) {
-    return (...children) => {
-        recursivelyAppend(root, children);
-    };
-    function recursivelyAppend(parent, children) {
-        if (Array.isArray(children)) {
-            children.forEach((child, index) => {
-                if (Array.isArray(child)) {
-                    let subParent = getParentOf(index);
-                    if (!subParent)
-                        return undefined;
-                    recursivelyAppend(subParent, child);
-                }
-                else {
-                    recursivelyAppend(parent, child);
-                }
-            });
-        }
-        else {
-            append(parent, children);
-        }
-        function getParentOf(index) {
-            if (index < 0 || !Array.isArray(children))
-                return null;
-            let parent = children[index - 1];
-            if (Array.isArray(parent))
-                return getParentOf(index - 1);
-            return parent;
-        }
-    }
+
+function convertToKebabCase(str) {
+    return str
+        .replace(/(?<!^)([A-Z])/g, '-$1')
+        .toLowerCase();
+}
+
+function clearContent(targetNode) {
+    targetNode.textContent = '';
+    return targetNode;
 }
 function addClass(targetElement, ...classNames) {
     classNames = classNames.map(className => className.split(' ')).flat(1).filter(className => !!className);
@@ -298,33 +420,37 @@ function applyStyle(targetElement, stylePropOrMap, styleValue) {
     targetElement.style.cssText += accumulatedStyles;
     return targetElement;
 }
-function parseTagDescriptor(descriptor) {
-    const tagMatches = descriptor.match(/^(\w+)/);
-    const classMatches = descriptor.matchAll(/\.([\w-]+)(?![^\[]*\])/g);
-    const idMatches = descriptor.matchAll(/#([\w\s-]+)/g);
-    const attrMatches = descriptor.matchAll(/\[([\w-]+)(?:=("|')?(.*?)\2?)?\]/g);
-    const classes = Array.from(classMatches).map(match => match[1]);
-    const ids = Array.from(idMatches).map(match => match[1].trim());
-    const attrs = {};
-    for (const match of attrMatches) {
-        attrs[match[1]] = match[3] || '';
-    }
-    return {
-        tag: (tagMatches ? tagMatches[1] : 'div'),
-        class: classes,
-        id: ids,
-        attrs
+
+function assembleDOM(root) {
+    return (...children) => {
+        recursivelyAppend(root, children);
     };
-}
-function findPropertyDescriptor(obj, prop) {
-    while (obj) {
-        const descriptor = Object.getOwnPropertyDescriptor(obj, prop);
-        if (descriptor) {
-            return descriptor;
+    function recursivelyAppend(parent, children) {
+        if (Array.isArray(children)) {
+            children.forEach((child, index) => {
+                if (Array.isArray(child)) {
+                    let subParent = getParentOf(index);
+                    if (!subParent)
+                        return undefined;
+                    recursivelyAppend(subParent, child);
+                }
+                else {
+                    recursivelyAppend(parent, child);
+                }
+            });
         }
-        obj = Object.getPrototypeOf(obj);
+        else {
+            append(parent, children);
+        }
+        function getParentOf(index) {
+            if (index < 0 || !Array.isArray(children))
+                return null;
+            let parent = children[index - 1];
+            if (Array.isArray(parent))
+                return getParentOf(index - 1);
+            return parent;
+        }
     }
-    return null;
 }
 
-export { Abbr, Address, Anchor, Area, Article, Aside, AudioElement, B, Base, Bdi, Bdo, Blockquote, Body, Br, Button, Canvas, Caption, Cite, Code, Col, Colgroup, Data, Datalist, Dd, Del, Details, Dfn, Dialog, Div, Dl, Dt, Em, Embed, Fieldset, Figcaption, Figure, Footer, Form, Fragment, H1, H2, H3, H4, H5, H6, Head, Header, Hgroup, Hr, Html, I, Iframe, Img, Input, Ins, Kbd, Label, Legend, Li, LinkElement, Main, MapElement, Mark, Menu, Meta, Meter, Nav, Noscript, ObjectElement, Ol, Optgroup, OptionElement, Output, P, Picture, Pre, Progress, Q, Rp, Rt, Ruby, S, Samp, Script, Section, Select, Small, Source, Span, Strong, Style, StylesheetLink, Sub, Summary, Sup, TBody, TFoot, THead, Table, Td, Template, TextNode, Textarea, Th, Time, Title, Tr, Track, U, Ul, Var, Video, Wbr, addClass, append, applyStyle, assembleDOM, clearContent, createElement, innerHTML, innerText, removeClass, setAttribute, setValue };
+export { Abbr, Address, Anchor, Area, Article, Aside, AudioElement, B, Base, Bdi, Bdo, Blockquote, Body, Br, Button, Canvas, Caption, Cite, Code, Col, Colgroup, Data, Datalist, Dd, Del, Details, Dfn, Dialog, Div, Dl, Dt, Em, Embed, Fieldset, Figcaption, Figure, Footer, Form, Fragment, H1, H2, H3, H4, H5, H6, Head, Header, Hgroup, Hr, Html, I, Iframe, Img, Input, Ins, Kbd, Label, Legend, Li, LinkElement, Main, MapElement, Mark, Menu, Meta, Meter, Nav, Noscript, ObjectElement, Ol, Optgroup, OptionElement, Output, P, Picture, Pre, Progress, Q, Rp, Rt, Ruby, S, Samp, Script, Section, Select, Small, Source, Span, Strong, Style, StylesheetLink, Sub, Summary, Sup, TBody, TFoot, THead, Table, Td, Template, TextNode, Textarea, Th, Time, Title, Tr, Track, U, Ul, Var, Video, Wbr, addClass, append, applyStyle, assembleDOM, bindState, clearContent, createElement, innerHTML, innerText, removeClass, setAttribute, setValue };

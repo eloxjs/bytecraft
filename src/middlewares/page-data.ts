@@ -1,5 +1,5 @@
-import ExceptionRenderer from "../services/exception-renderer";
-import Router from "../services/router";
+import ExceptionRenderer from "../router/exception-renderer";
+import Router from "../router/router";
 
 export default async function PageDataMiddleware(request:LoadRequest, next:MiddlewareNext) {
     let exit = false;

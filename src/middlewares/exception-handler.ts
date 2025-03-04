@@ -1,4 +1,4 @@
-import ExceptionRenderer from "../services/exception-renderer";
+import ExceptionRenderer from "../router/exception-renderer";
 
 export default async function ExceptionHandlerMiddleware(request:LoadRequest, next:MiddlewareNext) {
     /**
