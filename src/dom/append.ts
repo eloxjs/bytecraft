@@ -1,4 +1,4 @@
-import DOMState from "./dom-state";
+import DOMState, { __bindDOMState } from "./dom-state";
 
 /**
  * Appends child elements or text nodes to a parent Element.
@@ -21,11 +21,15 @@ export function append<ParentType extends Element|DocumentFragment>(targetParent
             if(item instanceof DOMState) {
                 let node:null|Node = null;
 
-                item.init((values, previousValues) => {
+                __bindDOMState(item, (values, previousValues) => {
+                    // if(node !== null && !document.contains(node)) {
+                    //     return item.unbind();
+                    // }
+
                     const result = item.callback(values, previousValues) as Node | Text | string | boolean | undefined | null | number;
 
                     if(result === undefined || result === null || typeof result === 'boolean') {
-                        const comment = document.createComment("placeholder");
+                        const comment = document.createComment("");
                         if(node !== null) (node as ChildNode).replaceWith(comment);
                         node = comment;
                     }else if(typeof result === 'string' || typeof result === 'number') {
@@ -37,7 +41,6 @@ export function append<ParentType extends Element|DocumentFragment>(targetParent
                         node = result;
                     }
                 });
-
                 return node;
             }else {
                 return item;

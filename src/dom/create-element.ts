@@ -1,5 +1,5 @@
 import {findPropertyDescriptor, parseTagDescriptor} from "./helpers";
-import DOMState from "./dom-state";
+import DOMState, { __bindDOMState } from "./dom-state";
 
 function createElement<TagName extends keyof HTMLElementTagNameMap>(descriptor:TagName, config?:HTMLElementConfigMap[TagName]):HTMLElementTagNameMap[TagName];
 function createElement<Descriptor extends string>(descriptor:Descriptor, config?:HTMLElementConfigMap[ResolvedTagName<Descriptor>]): HTMLTypeFromSelector<Descriptor>;
@@ -120,7 +120,12 @@ function applyDynamicOrStatic<T>(
     setter: (element: HTMLElement, value: T) => void
 ) {
     if (value instanceof DOMState) {
-        value.init((values, previousValues) => {
+
+        __bindDOMState(value, (values, previousValues) => {
+            // if(!document.contains(element)) {
+            //     return value.unbind();
+            // }
+            
             const result = value.callback(values, previousValues);
             setter(element, result);
         });

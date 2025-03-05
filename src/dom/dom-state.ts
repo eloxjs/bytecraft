@@ -1,35 +1,60 @@
 import { useObjectProp } from "../hooks/use-object";
 
-export default class DOMState {
-    id; trackList; callback;
+const DOMStateList:WeakMap<PlainObject, Function[]> = new WeakMap();
 
-    constructor(id:null|any, trackList:{key:Record<string, any>}[], callback:(currentValue:any[], previousValue:any[]) => any) {
-        this.id = id;
+export default class DOMState {
+    trackList;
+    callback;
+
+    constructor(trackList:{key:Record<string, any>}[], callback:(currentValue:any[], previousValue:any[]) => any) {
         this.trackList = trackList;
         this.callback = callback;
+        DOMStateList.set(
+            this,
+            []
+        );
     }
 
-    public init(callback:(currentValue:any[], previousValue:any[]) => void) {
-        const values:any[] = [];
-        const previousValues:any[] = [];
+    public unbind() {
+        const deleteList = DOMStateList.get(this);
+        if(!deleteList) return void 0;
+        deleteList.forEach(stateDelete => stateDelete());
+        deleteList.splice(0, deleteList.length);
+        DOMStateList.delete(this);
+    }
 
-        this.trackList.forEach((trackItem, index) => {
-            Object.entries(trackItem).forEach(([trackItemKey, trackItemObject]) => {
-                values.push(trackItemObject[trackItemKey]);
-                useObjectProp(trackItemObject, trackItemKey, (value, previousValue) => {
-                    values[index] = value;
-                    previousValues[index] = previousValue;
-                    callback(values, previousValues);
-                }, false);
-            });
+    public ref(object:Record<string, any>, key?:string) {
+        object[key ? key : 'current'] = this;
+    }
+}
+
+/**
+ * It's used by methods like `append` and `createElement`.
+ */
+export function __bindDOMState(domState: DOMState, callback:(currentValue:any[], previousValue:any[]) => void) {
+    const values:any[] = [];
+    const previousValues:any[] = [];
+
+    domState.trackList.forEach((trackItem, index) => {
+        Object.entries(trackItem).forEach(([trackItemKey, trackItemObject]) => {
+            values.push(trackItemObject[trackItemKey]);
+            const addedState = useObjectProp(trackItemObject, trackItemKey, (value, previousValue) => {
+                values[index] = value;
+                previousValues[index] = previousValue;
+                callback(values, previousValues);
+            }, false);
+
+            DOMStateList.get(domState)?.push(addedState.delete);
         });
+    });
 
-        callback(values, previousValues);
-    }
+    callback(values, previousValues);
 }
 
-function bindState(trackList:{key:Record<string, any>}[], callback:(currentValue:any[], previousValue:any[]) => void) {
-    return new DOMState(null, trackList, callback);
+export function bindState(trackList:{key:Record<string, any>}[], callback:(currentValue:any[], previousValue:any[]) => void) {
+    return new DOMState(trackList, callback);
 }
 
-export {bindState};
+export function unbindState(domState:DOMState) {
+    domState.unbind();
+}

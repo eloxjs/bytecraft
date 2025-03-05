@@ -16,11 +16,11 @@ function defineStatefulProperty(object, propertyKey, valueHandler, defaultExecut
         Object.defineProperty(object, propertyKey, {
             get: () => propertyValue,
             set: (value) => {
-                var _a;
+                var _a, _b;
                 if (value !== propertyValue) {
                     const previousValue = propertyValue;
                     propertyValue = value;
-                    (_a = objectStateMap.get(object).stateChangeHandlers[propertyKey]) === null || _a === undefined ? undefined : _a.forEach(handler => handler(previousValue));
+                    (_b = (_a = objectStateMap.get(object)) === null || _a === void 0 ? void 0 : _a.stateChangeHandlers[propertyKey]) === null || _b === void 0 ? void 0 : _b.forEach(handler => handler(previousValue));
                 }
             }
         });
@@ -40,6 +40,12 @@ function defineStatefulProperty(object, propertyKey, valueHandler, defaultExecut
             let handlerIndex = handlers.indexOf(stateChangeHandler);
             if (handlerIndex >= 0)
                 handlers.splice(handlerIndex, 1);
+            if (!handlers.length) {
+                delete objectStateMap.get(object).stateChangeHandlers[propertyKey];
+            }
+            if (!Object.keys(objectStateMap.get(object).stateChangeHandlers).length) {
+                objectStateMap.delete(object);
+            }
         }
     };
 }
@@ -48,30 +54,47 @@ function isPropertyConfigurable(targetObject, propertyKey) {
     return descriptor ? Boolean(descriptor.configurable) : false;
 }
 
+const DOMStateList = new WeakMap();
 class DOMState {
-    constructor(id, trackList, callback) {
-        this.id = id;
+    constructor(trackList, callback) {
         this.trackList = trackList;
         this.callback = callback;
+        DOMStateList.set(this, []);
     }
-    init(callback) {
-        const values = [];
-        const previousValues = [];
-        this.trackList.forEach((trackItem, index) => {
-            Object.entries(trackItem).forEach(([trackItemKey, trackItemObject]) => {
-                values.push(trackItemObject[trackItemKey]);
-                defineStatefulProperty(trackItemObject, trackItemKey, (value, previousValue) => {
-                    values[index] = value;
-                    previousValues[index] = previousValue;
-                    callback(values, previousValues);
-                }, false);
-            });
-        });
-        callback(values, previousValues);
+    unbind() {
+        const deleteList = DOMStateList.get(this);
+        if (!deleteList)
+            return void 0;
+        deleteList.forEach(stateDelete => stateDelete());
+        deleteList.splice(0, deleteList.length);
+        DOMStateList.delete(this);
+    }
+    ref(object, key) {
+        object[key ? key : 'current'] = this;
     }
 }
+function __bindDOMState(domState, callback) {
+    const values = [];
+    const previousValues = [];
+    domState.trackList.forEach((trackItem, index) => {
+        Object.entries(trackItem).forEach(([trackItemKey, trackItemObject]) => {
+            var _a;
+            values.push(trackItemObject[trackItemKey]);
+            const addedState = defineStatefulProperty(trackItemObject, trackItemKey, (value, previousValue) => {
+                values[index] = value;
+                previousValues[index] = previousValue;
+                callback(values, previousValues);
+            }, false);
+            (_a = DOMStateList.get(domState)) === null || _a === void 0 ? void 0 : _a.push(addedState.delete);
+        });
+    });
+    callback(values, previousValues);
+}
 function bindState(trackList, callback) {
-    return new DOMState(null, trackList, callback);
+    return new DOMState(trackList, callback);
+}
+function unbindState(domState) {
+    domState.unbind();
 }
 
 function append(targetParent, ...childNodes) {
@@ -83,10 +106,10 @@ function append(targetParent, ...childNodes) {
     }).map((item) => {
         if (item instanceof DOMState) {
             let node = null;
-            item.init((values, previousValues) => {
+            __bindDOMState(item, (values, previousValues) => {
                 const result = item.callback(values, previousValues);
                 if (result === undefined || result === null || typeof result === 'boolean') {
-                    const comment = document.createComment("placeholder");
+                    const comment = document.createComment("");
                     if (node !== null)
                         node.replaceWith(comment);
                     node = comment;
@@ -215,7 +238,7 @@ function createElement(descriptor, config) {
                 return;
             }
             const descriptor = findPropertyDescriptor(element, key);
-            if (descriptor === null || descriptor === undefined ? undefined : descriptor.set) {
+            if (descriptor === null || descriptor === void 0 ? void 0 : descriptor.set) {
                 applyDynamicOrStatic(value, element, (el, val) => {
                     el[key] = val;
                 });
@@ -226,7 +249,7 @@ function createElement(descriptor, config) {
 }
 function applyDynamicOrStatic(value, element, setter) {
     if (value instanceof DOMState) {
-        value.init((values, previousValues) => {
+        __bindDOMState(value, (values, previousValues) => {
             const result = value.callback(values, previousValues);
             setter(element, result);
         });
@@ -431,7 +454,7 @@ function assembleDOM(root) {
                 if (Array.isArray(child)) {
                     let subParent = getParentOf(index);
                     if (!subParent)
-                        return undefined;
+                        return void 0;
                     recursivelyAppend(subParent, child);
                 }
                 else {
@@ -453,4 +476,4 @@ function assembleDOM(root) {
     }
 }
 
-export { Abbr, Address, Anchor, Area, Article, Aside, AudioElement, B, Base, Bdi, Bdo, Blockquote, Body, Br, Button, Canvas, Caption, Cite, Code, Col, Colgroup, Data, Datalist, Dd, Del, Details, Dfn, Dialog, Div, Dl, Dt, Em, Embed, Fieldset, Figcaption, Figure, Footer, Form, Fragment, H1, H2, H3, H4, H5, H6, Head, Header, Hgroup, Hr, Html, I, Iframe, Img, Input, Ins, Kbd, Label, Legend, Li, LinkElement, Main, MapElement, Mark, Menu, Meta, Meter, Nav, Noscript, ObjectElement, Ol, Optgroup, OptionElement, Output, P, Picture, Pre, Progress, Q, Rp, Rt, Ruby, S, Samp, Script, Section, Select, Small, Source, Span, Strong, Style, StylesheetLink, Sub, Summary, Sup, TBody, TFoot, THead, Table, Td, Template, TextNode, Textarea, Th, Time, Title, Tr, Track, U, Ul, Var, Video, Wbr, addClass, append, applyStyle, assembleDOM, bindState, clearContent, createElement, innerHTML, innerText, removeClass, setAttribute, setValue };
+export { Abbr, Address, Anchor, Area, Article, Aside, AudioElement, B, Base, Bdi, Bdo, Blockquote, Body, Br, Button, Canvas, Caption, Cite, Code, Col, Colgroup, Data, Datalist, Dd, Del, Details, Dfn, Dialog, Div, Dl, Dt, Em, Embed, Fieldset, Figcaption, Figure, Footer, Form, Fragment, H1, H2, H3, H4, H5, H6, Head, Header, Hgroup, Hr, Html, I, Iframe, Img, Input, Ins, Kbd, Label, Legend, Li, LinkElement, Main, MapElement, Mark, Menu, Meta, Meter, Nav, Noscript, ObjectElement, Ol, Optgroup, OptionElement, Output, P, Picture, Pre, Progress, Q, Rp, Rt, Ruby, S, Samp, Script, Section, Select, Small, Source, Span, Strong, Style, StylesheetLink, Sub, Summary, Sup, TBody, TFoot, THead, Table, Td, Template, TextNode, Textarea, Th, Time, Title, Tr, Track, U, Ul, Var, Video, Wbr, addClass, append, applyStyle, assembleDOM, bindState, clearContent, createElement, innerHTML, innerText, removeClass, setAttribute, setValue, unbindState };
