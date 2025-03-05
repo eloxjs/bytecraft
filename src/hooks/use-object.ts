@@ -30,7 +30,7 @@ function defineStatefulProperty<TargetObject extends PlainObject, PropertyKey ex
                 if (value !== propertyValue) {
                     const previousValue = propertyValue;
                     propertyValue = value;
-                    objectStateMap.get(object)!.stateChangeHandlers[propertyKey]?.forEach(handler => handler(previousValue));
+                    objectStateMap.get(object)?.stateChangeHandlers[propertyKey]?.forEach(handler => handler(previousValue));
                 }
             }
         });
@@ -56,6 +56,14 @@ function defineStatefulProperty<TargetObject extends PlainObject, PropertyKey ex
             let handlers = objectStateMap.get(object)!.stateChangeHandlers[propertyKey];
             let handlerIndex = handlers.indexOf(stateChangeHandler);
             if(handlerIndex >= 0) handlers.splice(handlerIndex, 1);
+
+            if(!handlers.length) {
+                delete objectStateMap.get(object)!.stateChangeHandlers[propertyKey];
+            }
+
+            if(!Object.keys(objectStateMap.get(object)!.stateChangeHandlers).length) {
+                objectStateMap.delete(object);
+            }
         }
     }
 }
