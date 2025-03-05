@@ -6,7 +6,7 @@
 ```js
 import { Router } from "bytecraft";
 
-Router.addRoute(
+Router.add(
     "/login", // URI
     () => { // Called on load
         console.log('Login page loaded.')
@@ -26,7 +26,7 @@ If a route has a `parent`, and the previous route is the parent, then it won't b
 
 #### Configuring Routes
 ```js
-Router.addRoute('/login', 'login-controller')
+Router.add('/login', 'login-controller')
     .id('route-id')
     .parent('parent-id')
     .onLoad(Function | 'controller-file-name@function')
@@ -42,8 +42,8 @@ import App, { Router } from "bytecraft";
 // Set controllers directory path
 App.config.directoryPaths.controllerDirectory = '/app/controllers';
 
-Router.addRoute("/login", "login-controller");
-Router.addRoute("/login", "login-controller@showPopup", "login-controller@hidePopup");
+Router.add("/login", "login-controller");
+Router.add("/login", "login-controller@showPopup", "login-controller@hidePopup");
 ```
 
 #### `/app/controllers/login-controller.js`
@@ -85,31 +85,31 @@ export default new class Login {
 ### Route Parameters
 #### Required Parameters
 ```js
-Router.addRoute("/task/{id}", (request, { id }) => {
+Router.add("/task/{id}", (request, { id }) => {
     console.log(`Load task => ${id}`);
 });
 ```
 #### Optional Parameters
 ```js
-Router.addRoute("/user/{name?}", (request, { name }) => {
+Router.add("/user/{name?}", (request, { name }) => {
     console.log(`Load user => ${name}`);
 });
 ```
 
 #### Setting Parameter Patterns
 ```js
-Router.addRoute("/task/{id}", (request, { id }) => {})
+Router.add("/task/{id}", (request, { id }) => {})
     .paramPattern('id', '[0-9]');
 ```
 
 ### Managing Routes
 #### Assign ID to Route
 ```js
-Router.addRoute('/signup/client', 'client-signup-controller').id('client-signup');
+Router.add('/signup/client', 'client-signup-controller').id('client-signup');
 ```
 #### Remove a Route
 ```js
-Router.removeRoute('client-signup');
+Router.remove('client-signup');
 ```
 #### Get Route URL by ID
 ```js
@@ -123,7 +123,7 @@ Router.route('client-signup');
 ### Prefix with Callback
 ```js
 Router.prefix('admin', () => {
-    Router.addRoute('/users', () => {
+    Router.add('/users', () => {
         // Matches "/admin/users"
     });
 });
@@ -132,7 +132,7 @@ Router.prefix('admin', () => {
 ### Global Prefix (Without Callback)
 ```js
 Router.prefix('admin');
-Router.addRoute('/users', () => {}); // Matches "/admin/users"
+Router.add('/users', () => {}); // Matches "/admin/users"
 ```
 
 #### Removing the Last Prefix
@@ -149,7 +149,7 @@ Router.prefix('admin/{user_id}').paramPattern('[0-9a-z]');
 
 ### Basic Usage
 ```js
-Router.addRoute('/dashboard', async (request, next) => {
+Router.add('/dashboard', async (request, next) => {
     if (request.pagedata.authenticated) return await next();
     Router.redirect('/login');
 });
@@ -171,7 +171,7 @@ Router.useRouteMiddleware('route-id', ...Middleware[]);
 ### Route Group with Middleware
 ```js
 Router.middleware([middlewares], () => {
-    Router.addRoute('tasks', 'tasks-middleware');
+    Router.add('tasks', 'tasks-middleware');
 });
 ```
 
@@ -182,7 +182,7 @@ import App, { Router } from "bytecraft";
 // Set middleware directory path
 App.config.directoryPaths.middlewareDirectory = '/app/middlewares';
 
-Router.addRoute('/dashboard', 'dashboard-controller').middleware('auth-middleware');
+Router.add('/dashboard', 'dashboard-controller').middleware('auth-middleware');
 ```
 
 #### `/app/middlewares/auth-middleware.js`
@@ -200,6 +200,6 @@ Router.defaultFetchPageData = true;
 ```
 #### Disable/Enable Page Data Middleware for a Specific Route
 ```js
-Router.addRoute('/login').hasPageData(false);
+Router.add('/login').hasPageData(false);
 ```
 

@@ -336,7 +336,7 @@ const Router = new class Router {
      * @param unload - Optional controller or function to execute when the route is unloaded.
      * @returns A route configurator to allow for chaining configurations.
      */
-    public addRoute(uriSegment: string, load: string | Function, unload?: string | Function) {
+    public add(uriSegment: string, load: string | Function, unload?: string | Function) {
         // Construct the full URI by combining the prefix and the provided URI segment.
         const fullUri = [...this.uriPrefix.map(i => i.prefix), uriSegment]
             .map(segment => this.cleanRouteURI(segment))
@@ -424,7 +424,7 @@ const Router = new class Router {
      * @param id - The ID of the route to be removed.
      * @returns The removed route if found, false otherwise.
      */
-    public removeRoute(id: Route['id']): Route | false {
+    public remove(id: Route['id']): Route | false {
         const routeIndex = this.routeList.findIndex(route => route.id === id);
         if (routeIndex >= 0) {
             return this.routeList.splice(routeIndex, 1)[0];

@@ -12,7 +12,7 @@ class EventManager {
     }
     removeEventListener(eventType, listener) {
         if (!this.events[eventType])
-            return undefined;
+            return void 0;
         const listenerIndex = this.events[eventType].indexOf(listener);
         if (listenerIndex >= 0) {
             this.events[eventType].splice(listenerIndex, 1);
@@ -253,7 +253,7 @@ const httpStatusCodes = {
 class HttpStatusCodeUtils {
     static getCodeByConstant(constant) {
         var _a;
-        return ((_a = httpStatusCodes[constant]) === null || _a === undefined ? undefined : _a.code) || null;
+        return ((_a = httpStatusCodes[constant]) === null || _a === void 0 ? void 0 : _a.code) || null;
     }
     static getConstantByCode(code) {
         return Object.keys(httpStatusCodes).find(constant => httpStatusCodes[constant].code === code) || null;
@@ -261,7 +261,7 @@ class HttpStatusCodeUtils {
     static getText(codeOrConstant) {
         var _a;
         if (typeof codeOrConstant === "string") {
-            return ((_a = httpStatusCodes[codeOrConstant]) === null || _a === undefined ? undefined : _a.text) || null;
+            return ((_a = httpStatusCodes[codeOrConstant]) === null || _a === void 0 ? void 0 : _a.text) || null;
         }
         const constant = HttpStatusCodeUtils.getConstantByCode(codeOrConstant);
         return constant ? httpStatusCodes[constant].text : null;
@@ -279,7 +279,7 @@ var __awaiter$3 = (undefined && undefined.__awaiter) || function (thisArg, _argu
 };
 class ExceptionRenderer {
     static renderException(status_1) {
-        return __awaiter$3(this, arguments, undefined, function* (status, data = null) {
+        return __awaiter$3(this, arguments, void 0, function* (status, data = null) {
             const httpStatusConstant = ExceptionRenderer.getStatusConstant(status);
             const httpStatus = httpStatusCodes[httpStatusConstant];
             const customView = ExceptionRenderer.customViewMappings[httpStatusConstant];
@@ -308,7 +308,7 @@ class ExceptionRenderer {
         return HttpStatusCodeUtils.getConstantByCode(status);
     }
     static renderCustomView(customView, data) {
-        return __awaiter$3(this, undefined, undefined, function* () {
+        return __awaiter$3(this, void 0, void 0, function* () {
             const errorViewDirectoryPath = App.config.directoryPaths.errorViewDirectory;
             const normalizedErrorViewPath = (!errorViewDirectoryPath || errorViewDirectoryPath === '/')
                 ? ''
@@ -370,7 +370,7 @@ var __awaiter$2 = (undefined && undefined.__awaiter) || function (thisArg, _argu
     });
 };
 function ExceptionHandlerMiddleware(request, next) {
-    return __awaiter$2(this, undefined, undefined, function* () {
+    return __awaiter$2(this, void 0, void 0, function* () {
         if (request.pagedata && !request.pagedata.ok) {
             return ExceptionRenderer.renderException(request.pagedata.status, request.pagedata.body);
         }
@@ -388,7 +388,7 @@ var __awaiter$1 = (undefined && undefined.__awaiter) || function (thisArg, _argu
     });
 };
 function PageDataMiddleware(request, next) {
-    return __awaiter$1(this, undefined, undefined, function* () {
+    return __awaiter$1(this, void 0, void 0, function* () {
         var _a;
         let exit = false;
         if (!request.pagedata && request.route.hasPageData) {
@@ -406,7 +406,7 @@ function PageDataMiddleware(request, next) {
                 exit = true;
             });
         }
-        if ((_a = request.pagedata) === null || _a === undefined ? undefined : _a.redirect) {
+        if ((_a = request.pagedata) === null || _a === void 0 ? void 0 : _a.redirect) {
             return Router.redirect(request.pagedata.redirect, Object.assign(Object.assign({}, request.pagedata), { redirect: null }));
         }
         if (!exit)
@@ -547,7 +547,7 @@ const Router = new class Router {
     endPrefix() {
         this.uriPrefix.pop();
     }
-    addRoute(uriSegment, load, unload) {
+    add(uriSegment, load, unload) {
         const fullUri = [...this.uriPrefix.map(i => i.prefix), uriSegment]
             .map(segment => this.cleanRouteURI(segment))
             .filter(Boolean)
@@ -620,7 +620,7 @@ const Router = new class Router {
         this.routeList.push(newRoute);
         return routeConfigurator;
     }
-    removeRoute(id) {
+    remove(id) {
         const routeIndex = this.routeList.findIndex(route => route.id === id);
         if (routeIndex >= 0) {
             return this.routeList.splice(routeIndex, 1)[0];
@@ -628,20 +628,20 @@ const Router = new class Router {
         return false;
     }
     processCurrentRoute() {
-        return __awaiter(this, arguments, undefined, function* (pagedata = null, navigationType = 'push', optional) {
+        return __awaiter(this, arguments, void 0, function* (pagedata = null, navigationType = 'push', optional) {
             var _a;
             const routeToLoad = this.findRouteByPath();
             if (!routeToLoad) {
-                ExceptionRenderer.renderException('NOT_FOUND', (_a = window.$PageData) === null || _a === undefined ? undefined : _a.body);
+                ExceptionRenderer.renderException('NOT_FOUND', (_a = window.$PageData) === null || _a === void 0 ? void 0 : _a.body);
                 window.$PageData = null;
                 this.previousState = null;
-                return undefined;
+                return void 0;
             }
             yield this.loadRouteData(routeToLoad, pagedata, navigationType, optional);
         });
     }
     loadRouteData(route_1) {
-        return __awaiter(this, arguments, undefined, function* (route, pagedata = null, navigationType = 'push', optional) {
+        return __awaiter(this, arguments, void 0, function* (route, pagedata = null, navigationType = 'push', optional) {
             const routeParameters = this.extractRouteParams(route.path, window.location.pathname, route.paramPatterns);
             const hasSameRoute = this.previousState ? this.previousState.route.id === route.id : false;
             const previousStateContext = this.previousState === null ? null : this.createStateContext(this.previousState);
@@ -654,7 +654,7 @@ const Router = new class Router {
                 optional,
                 previousRequest: previousStateContext
             });
-            if (!(previousStateContext === null || previousStateContext === undefined ? undefined : previousStateContext.isChildOf(route.id))) {
+            if (!(previousStateContext === null || previousStateContext === void 0 ? void 0 : previousStateContext.isChildOf(route.id))) {
                 yield this.processRouteLoading(route, Object.assign(currentStateContext, { pagedata }), routeParameters);
             }
             this.previousState = {
@@ -715,9 +715,9 @@ const Router = new class Router {
         return allPreviousRoutes;
     }
     processRouteLoading(route, request, parameters) {
-        return __awaiter(this, undefined, undefined, function* () {
+        return __awaiter(this, void 0, void 0, function* () {
             let middlewares = this.getMiddlewaresForRoute(route);
-            const finalAction = () => __awaiter(this, undefined, undefined, function* () {
+            const finalAction = () => __awaiter(this, void 0, void 0, function* () {
                 const onLoadAction = yield this.getRouteAction(route);
                 if (typeof onLoadAction === 'function')
                     yield onLoadAction(request, parameters);
@@ -727,7 +727,7 @@ const Router = new class Router {
         });
     }
     processRouteUnloading(route, context) {
-        return __awaiter(this, undefined, undefined, function* () {
+        return __awaiter(this, void 0, void 0, function* () {
             const onUnloadAction = yield this.getRouteAction(route, 'unload');
             if (typeof onUnloadAction === 'function')
                 yield onUnloadAction(context);
@@ -770,7 +770,7 @@ const Router = new class Router {
         return extractedParams;
     }
     getRouteAction(route_1) {
-        return __awaiter(this, arguments, undefined, function* (route, actionType = 'load') {
+        return __awaiter(this, arguments, void 0, function* (route, actionType = 'load') {
             const actionDescriptor = actionType === 'load' ? route.actions.load : (route.actions.unload || route.actions.load);
             const defaultFunctionName = actionType;
             if (actionType === 'unload' && typeof actionDescriptor === 'function' && !route.actions.unload)
@@ -860,7 +860,7 @@ const Router = new class Router {
         return [...globalMiddlewares, ...(this.routeMiddlewares[route.id] || [])];
     }
     composeMiddlewares(middlewares) {
-        return __awaiter(this, undefined, undefined, function* () {
+        return __awaiter(this, void 0, void 0, function* () {
             const resolvedMiddlewares = yield Promise.all(middlewares.map(this.resolveMiddleware));
             return function (request, finalNext) {
                 let currentMiddlewareIndex = -1;
@@ -885,7 +885,7 @@ const Router = new class Router {
         });
     }
     resolveMiddleware(middleware) {
-        return __awaiter(this, undefined, undefined, function* () {
+        return __awaiter(this, void 0, void 0, function* () {
             if (typeof middleware === 'function') {
                 return middleware;
             }
@@ -1067,11 +1067,11 @@ const App = new class App extends EventManager {
         var _a, _b;
         super();
         this.config = appConfig;
-        this.csrfToken = ((_b = (_a = document.querySelector('meta[name="csrf-token"]')) === null || _a === undefined ? undefined : _a.getAttribute) === null || _b === undefined ? undefined : _b.call(_a, 'content')) || '';
+        this.csrfToken = ((_b = (_a = document.querySelector('meta[name="csrf-token"]')) === null || _a === void 0 ? void 0 : _a.getAttribute) === null || _b === void 0 ? void 0 : _b.call(_a, 'content')) || '';
         this.theme = themeSetInLocalStorage;
         window.addEventListener('storage', (event) => {
             if (event.key !== 'theme')
-                return undefined;
+                return void 0;
             this.theme = event.newValue;
         });
     }

@@ -30,8 +30,8 @@ App.name = 'Your App Name';
 
 App.config.directoryPaths.controllerDirectory = '/app/controllers';
 
-Router.addRoute('/', 'dashboard-controller').id('dashboard');
-Router.addRoute('/login', 'login-controller').id('login');
+Router.add('/', 'dashboard-controller').id('dashboard');
+Router.add('/login', 'login-controller').id('login');
 
 Router.processCurrentRoute();
 ```
