@@ -26,7 +26,9 @@ function createElement<TagName extends keyof HTMLElementTagNameMap>(descriptor: 
         attributes(value: ElementCustomConfig<DOMState>['attributes']) {
             applyDynamicOrStatic(value, element, (el, val) => {
                 Object.entries(val).forEach(([key, val]) => {
-                    el.setAttribute(key, val as string);
+                    applyDynamicOrStatic(val, element, (el, attrValue) => {
+                        el.setAttribute(key, attrValue as string);
+                    })
                 });
             });
         },

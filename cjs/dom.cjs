@@ -22,7 +22,7 @@ function defineStatefulProperty(object, propertyKey, valueHandler, defaultExecut
                 if (value !== propertyValue) {
                     const previousValue = propertyValue;
                     propertyValue = value;
-                    (_b = (_a = objectStateMap.get(object)) === null || _a === void 0 ? void 0 : _a.stateChangeHandlers[propertyKey]) === null || _b === void 0 ? void 0 : _b.forEach(handler => handler(previousValue));
+                    (_b = (_a = objectStateMap.get(object)) === null || _a === undefined ? undefined : _a.stateChangeHandlers[propertyKey]) === null || _b === undefined ? undefined : _b.forEach(handler => handler(previousValue));
                 }
             }
         });
@@ -66,7 +66,7 @@ class DOMState {
     unbind() {
         const deleteList = DOMStateList.get(this);
         if (!deleteList)
-            return void 0;
+            return undefined;
         deleteList.forEach(stateDelete => stateDelete());
         deleteList.splice(0, deleteList.length);
         DOMStateList.delete(this);
@@ -87,7 +87,7 @@ function __bindDOMState(domState, callback) {
                 previousValues[index] = previousValue;
                 callback(values, previousValues);
             }, false);
-            (_a = DOMStateList.get(domState)) === null || _a === void 0 ? void 0 : _a.push(addedState.delete);
+            (_a = DOMStateList.get(domState)) === null || _a === undefined ? undefined : _a.push(addedState.delete);
         });
     });
     callback(values, previousValues);
@@ -188,7 +188,9 @@ function createElement(descriptor, config) {
         attributes(value) {
             applyDynamicOrStatic(value, element, (el, val) => {
                 Object.entries(val).forEach(([key, val]) => {
-                    el.setAttribute(key, val);
+                    applyDynamicOrStatic(val, element, (el, attrValue) => {
+                        el.setAttribute(key, attrValue);
+                    });
                 });
             });
         },
@@ -240,7 +242,7 @@ function createElement(descriptor, config) {
                 return;
             }
             const descriptor = findPropertyDescriptor(element, key);
-            if (descriptor === null || descriptor === void 0 ? void 0 : descriptor.set) {
+            if (descriptor === null || descriptor === undefined ? undefined : descriptor.set) {
                 applyDynamicOrStatic(value, element, (el, val) => {
                     el[key] = val;
                 });
@@ -456,7 +458,7 @@ function assembleDOM(root) {
                 if (Array.isArray(child)) {
                     let subParent = getParentOf(index);
                     if (!subParent)
-                        return void 0;
+                        return undefined;
                     recursivelyAppend(subParent, child);
                 }
                 else {
