@@ -22,7 +22,7 @@ function defineStatefulProperty(object, propertyKey, valueHandler, defaultExecut
                 if (value !== propertyValue) {
                     const previousValue = propertyValue;
                     propertyValue = value;
-                    (_b = (_a = objectStateMap.get(object)) === null || _a === undefined ? undefined : _a.stateChangeHandlers[propertyKey]) === null || _b === undefined ? undefined : _b.forEach(handler => handler(previousValue));
+                    (_b = (_a = objectStateMap.get(object)) === null || _a === void 0 ? void 0 : _a.stateChangeHandlers[propertyKey]) === null || _b === void 0 ? void 0 : _b.forEach(handler => handler(previousValue));
                 }
             }
         });
@@ -66,7 +66,7 @@ class DOMState {
     unbind() {
         const deleteList = DOMStateList.get(this);
         if (!deleteList)
-            return undefined;
+            return void 0;
         deleteList.forEach(stateDelete => stateDelete());
         deleteList.splice(0, deleteList.length);
         DOMStateList.delete(this);
@@ -87,7 +87,7 @@ function __bindDOMState(domState, callback) {
                 previousValues[index] = previousValue;
                 callback(values, previousValues);
             }, false);
-            (_a = DOMStateList.get(domState)) === null || _a === undefined ? undefined : _a.push(addedState.delete);
+            (_a = DOMStateList.get(domState)) === null || _a === void 0 ? void 0 : _a.push(addedState.delete);
         });
     });
     callback(values, previousValues);
@@ -186,10 +186,10 @@ function createElement(descriptor, config) {
     }
     const customConfig = {
         attributes(value) {
-            applyDynamicOrStatic(value, element, (el, val) => {
+            applyDynamicOrStatic(value, (val) => {
                 Object.entries(val).forEach(([key, val]) => {
-                    applyDynamicOrStatic(val, element, (el, attrValue) => {
-                        el.setAttribute(key, attrValue);
+                    applyDynamicOrStatic(val, (attrValue) => {
+                        element.setAttribute(key, attrValue);
                     });
                 });
             });
@@ -198,30 +198,32 @@ function createElement(descriptor, config) {
             customConfig.attributes(value);
         },
         '.': (value) => {
-            applyDynamicOrStatic(value, element, (el, val) => {
-                el.className = val;
+            applyDynamicOrStatic(value, (val) => {
+                element.className = val;
             });
         },
         '#': (value) => {
-            applyDynamicOrStatic(value, element, (el, val) => {
-                el.id = val;
+            applyDynamicOrStatic(value, (val) => {
+                element.id = val;
             });
         },
         html(value) {
-            applyDynamicOrStatic(value, element, (el, val) => {
-                el.innerHTML = val;
+            applyDynamicOrStatic(value, (val) => {
+                element.innerHTML = val;
             });
         },
         text(value) {
-            applyDynamicOrStatic(value, element, (el, val) => {
-                el.textContent = val;
+            applyDynamicOrStatic(value, (val) => {
+                element.textContent = val;
             });
         },
         style(value) {
-            applyDynamicOrStatic(value, element, (el, val) => {
-                Object.entries(val).forEach(([property, value]) => {
-                    el.style.setProperty(property.startsWith('--') ? property :
-                        property.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`), value);
+            applyDynamicOrStatic(value, (val) => {
+                Object.entries(val).forEach(([property, propertyValue]) => {
+                    applyDynamicOrStatic(propertyValue, (val) => {
+                        element.style.setProperty(property.startsWith('--') ? property :
+                            property.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`), val);
+                    });
                 });
             });
         },
@@ -242,24 +244,24 @@ function createElement(descriptor, config) {
                 return;
             }
             const descriptor = findPropertyDescriptor(element, key);
-            if (descriptor === null || descriptor === undefined ? undefined : descriptor.set) {
-                applyDynamicOrStatic(value, element, (el, val) => {
-                    el[key] = val;
+            if (descriptor === null || descriptor === void 0 ? void 0 : descriptor.set) {
+                applyDynamicOrStatic(value, (val) => {
+                    element[key] = val;
                 });
             }
         });
     }
     return element;
 }
-function applyDynamicOrStatic(value, element, setter) {
+function applyDynamicOrStatic(value, setter) {
     if (value instanceof DOMState) {
         __bindDOMState(value, (values, previousValues) => {
             const result = value.callback(values, previousValues);
-            setter(element, result);
+            setter(result);
         });
     }
     else {
-        setter(element, value);
+        setter(value);
     }
 }
 
@@ -458,7 +460,7 @@ function assembleDOM(root) {
                 if (Array.isArray(child)) {
                     let subParent = getParentOf(index);
                     if (!subParent)
-                        return undefined;
+                        return void 0;
                     recursivelyAppend(subParent, child);
                 }
                 else {

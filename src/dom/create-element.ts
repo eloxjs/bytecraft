@@ -24,10 +24,10 @@ function createElement<TagName extends keyof HTMLElementTagNameMap>(descriptor: 
 
     const customConfig = {
         attributes(value: ElementCustomConfig<DOMState>['attributes']) {
-            applyDynamicOrStatic(value, element, (el, val) => {
+            applyDynamicOrStatic(value, (val) => {
                 Object.entries(val).forEach(([key, val]) => {
-                    applyDynamicOrStatic(val, element, (el, attrValue) => {
-                        el.setAttribute(key, attrValue as string);
+                    applyDynamicOrStatic(val, (attrValue) => {
+                        element.setAttribute(key, attrValue as string);
                     })
                 });
             });
@@ -38,37 +38,39 @@ function createElement<TagName extends keyof HTMLElementTagNameMap>(descriptor: 
         },
 
         '.': (value: ElementCustomConfig<DOMState>['.']) => {
-            applyDynamicOrStatic(value, element, (el, val) => {
-                el.className = val;
+            applyDynamicOrStatic(value, (val) => {
+                element.className = val;
             });
         },
 
         '#': (value: ElementCustomConfig<DOMState>['#']) => {
-            applyDynamicOrStatic(value, element, (el, val) => {
-                el.id = val;
+            applyDynamicOrStatic(value, (val) => {
+                element.id = val;
             });
         },
 
         html(value: ElementCustomConfig<DOMState>['html']) {
-            applyDynamicOrStatic(value, element, (el, val) => {
-                el.innerHTML = val;
+            applyDynamicOrStatic(value, (val) => {
+                element.innerHTML = val;
             });
         },
 
         text(value: HTMLElementCustomConfig<DOMState>['text']) {
-            applyDynamicOrStatic(value, element, (el, val) => {
-                el.textContent = val;
+            applyDynamicOrStatic(value, (val) => {
+                element.textContent = val;
             });
         },
 
         style(value: HTMLElementConfig['style']) {
-            applyDynamicOrStatic(value, element, (el, val) => {
-                Object.entries(val).forEach(([property, value]) => {
-                    el.style.setProperty(
-                        property.startsWith('--') ? property : 
-                        property.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`),
-                        value
-                    );
+            applyDynamicOrStatic(value, (val) => {
+                Object.entries(val).forEach(([property, propertyValue]) => {
+                    applyDynamicOrStatic(propertyValue, (val) => {
+                        element.style.setProperty(
+                            property.startsWith('--') ? property : 
+                            property.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`),
+                            val
+                        );
+                    })
                 });
             });
         },
@@ -105,8 +107,8 @@ function createElement<TagName extends keyof HTMLElementTagNameMap>(descriptor: 
 
             const descriptor = findPropertyDescriptor(element, key);
             if (descriptor?.set) {
-                applyDynamicOrStatic(value, element, (el, val) => {
-                    (el as any)[key] = val;
+                applyDynamicOrStatic(value, (val) => {
+                    (element as any)[key] = val;
                 });
             }
         });
@@ -118,8 +120,7 @@ function createElement<TagName extends keyof HTMLElementTagNameMap>(descriptor: 
 // Helper function to handle dynamic or static values
 function applyDynamicOrStatic<T>(
     value: T | DOMState,
-    element: HTMLElement,
-    setter: (element: HTMLElement, value: T) => void
+    setter: (value: T) => void
 ) {
     if (value instanceof DOMState) {
 
@@ -129,10 +130,10 @@ function applyDynamicOrStatic<T>(
             // }
             
             const result = value.callback(values, previousValues);
-            setter(element, result);
+            setter(result);
         });
     } else {
-        setter(element, value);
+        setter(value);
     }
 }
 
