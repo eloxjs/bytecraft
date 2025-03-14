@@ -137,8 +137,8 @@ interface ParentNodeConfig extends NodeConfig {
 }
 
 interface ElementCustomConfig<DOMState> {
-    attributes: Record<string, string> | DOMState;
-    '[]': Record<string, string> | DOMState;
+    attributes: Record<string, string|boolean> | DOMState;
+    '[]': Record<string, string|boolean> | DOMState;
     '.': string | DOMState;
     '#': string | DOMState;
     'html': string | DOMState;

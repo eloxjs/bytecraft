@@ -20,7 +20,7 @@ function defineStatefulProperty(object, propertyKey, valueHandler, defaultExecut
                 if (value !== propertyValue) {
                     const previousValue = propertyValue;
                     propertyValue = value;
-                    (_b = (_a = objectStateMap.get(object)) === null || _a === void 0 ? void 0 : _a.stateChangeHandlers[propertyKey]) === null || _b === void 0 ? void 0 : _b.forEach(handler => handler(previousValue));
+                    (_b = (_a = objectStateMap.get(object)) === null || _a === undefined ? undefined : _a.stateChangeHandlers[propertyKey]) === null || _b === undefined ? undefined : _b.forEach(handler => handler(previousValue));
                 }
             }
         });
@@ -77,7 +77,7 @@ class DOMState {
     unbind() {
         const deleteList = DOMStateList.get(this);
         if (!deleteList)
-            return void 0;
+            return undefined;
         deleteList.forEach(stateDelete => stateDelete());
         deleteList.splice(0, deleteList.length);
         DOMStateList.delete(this);
@@ -98,7 +98,7 @@ function __bindDOMState(domState, callback) {
                 previousValues[index] = previousValue;
                 callback(values, previousValues);
             }, false);
-            (_a = DOMStateList.get(domState)) === null || _a === void 0 ? void 0 : _a.push(addedState.delete);
+            (_a = DOMStateList.get(domState)) === null || _a === undefined ? undefined : _a.push(addedState.delete);
         });
     });
     callback(values, previousValues);
@@ -200,7 +200,12 @@ function createElement(descriptor, config) {
             applyDynamicOrStatic(value, (val) => {
                 Object.entries(val).forEach(([key, val]) => {
                     applyDynamicOrStatic(val, (attrValue) => {
-                        element.setAttribute(key, attrValue);
+                        if (typeof attrValue !== 'string' && !attrValue) {
+                            element.removeAttribute(key);
+                        }
+                        else {
+                            element.setAttribute(key, attrValue.toString());
+                        }
                     });
                 });
             });
@@ -255,7 +260,7 @@ function createElement(descriptor, config) {
                 return;
             }
             const descriptor = findPropertyDescriptor(element, key);
-            if (descriptor === null || descriptor === void 0 ? void 0 : descriptor.set) {
+            if (descriptor === null || descriptor === undefined ? undefined : descriptor.set) {
                 applyDynamicOrStatic(value, (val) => {
                     element[key] = val;
                 });
@@ -471,7 +476,7 @@ function assembleDOM(root) {
                 if (Array.isArray(child)) {
                     let subParent = getParentOf(index);
                     if (!subParent)
-                        return void 0;
+                        return undefined;
                     recursivelyAppend(subParent, child);
                 }
                 else {
@@ -601,7 +606,7 @@ function prepareListeners(targetArray, addedItems, removedItems, replacedItems) 
         return {
             params: [removedItem],
             type: 'removeItem',
-            listeners: ((_a = targetArrayMutationListeners['removeItem'].find((entry) => entry.index === removedItem.index)) === null || _a === void 0 ? void 0 : _a.listeners) || []
+            listeners: ((_a = targetArrayMutationListeners['removeItem'].find((entry) => entry.index === removedItem.index)) === null || _a === undefined ? undefined : _a.listeners) || []
         };
     });
     let listenersForReplacedItems = replacedItems.map((replacedItem) => {
@@ -609,7 +614,7 @@ function prepareListeners(targetArray, addedItems, removedItems, replacedItems) 
         return {
             params: [replacedItem],
             type: 'replaceItem',
-            listeners: ((_a = targetArrayMutationListeners['replaceItem'].find((entry) => entry.index === replacedItem.index)) === null || _a === void 0 ? void 0 : _a.listeners) || []
+            listeners: ((_a = targetArrayMutationListeners['replaceItem'].find((entry) => entry.index === replacedItem.index)) === null || _a === undefined ? undefined : _a.listeners) || []
         };
     });
     return [listenersForAddedItems, ...listenersForRemovedItems, ...listenersForReplacedItems].filter(entry => !!entry.listeners.length);

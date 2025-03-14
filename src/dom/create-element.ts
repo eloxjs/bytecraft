@@ -27,8 +27,12 @@ function createElement<TagName extends keyof HTMLElementTagNameMap>(descriptor: 
             applyDynamicOrStatic(value, (val) => {
                 Object.entries(val).forEach(([key, val]) => {
                     applyDynamicOrStatic(val, (attrValue) => {
-                        element.setAttribute(key, attrValue as string);
-                    })
+                        if(typeof attrValue !== 'string' && !attrValue) {
+                            element.removeAttribute(key);
+                        }else {
+                            element.setAttribute(key, attrValue.toString());
+                        }
+                    });
                 });
             });
         },

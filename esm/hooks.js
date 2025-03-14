@@ -106,7 +106,7 @@ function prepareListeners(targetArray, addedItems, removedItems, replacedItems) 
         return {
             params: [removedItem],
             type: 'removeItem',
-            listeners: ((_a = targetArrayMutationListeners['removeItem'].find((entry) => entry.index === removedItem.index)) === null || _a === void 0 ? void 0 : _a.listeners) || []
+            listeners: ((_a = targetArrayMutationListeners['removeItem'].find((entry) => entry.index === removedItem.index)) === null || _a === undefined ? undefined : _a.listeners) || []
         };
     });
     let listenersForReplacedItems = replacedItems.map((replacedItem) => {
@@ -114,7 +114,7 @@ function prepareListeners(targetArray, addedItems, removedItems, replacedItems) 
         return {
             params: [replacedItem],
             type: 'replaceItem',
-            listeners: ((_a = targetArrayMutationListeners['replaceItem'].find((entry) => entry.index === replacedItem.index)) === null || _a === void 0 ? void 0 : _a.listeners) || []
+            listeners: ((_a = targetArrayMutationListeners['replaceItem'].find((entry) => entry.index === replacedItem.index)) === null || _a === undefined ? undefined : _a.listeners) || []
         };
     });
     return [listenersForAddedItems, ...listenersForRemovedItems, ...listenersForReplacedItems].filter(entry => !!entry.listeners.length);
@@ -208,7 +208,7 @@ function defineStatefulProperty(object, propertyKey, valueHandler, defaultExecut
                 if (value !== propertyValue) {
                     const previousValue = propertyValue;
                     propertyValue = value;
-                    (_b = (_a = objectStateMap.get(object)) === null || _a === void 0 ? void 0 : _a.stateChangeHandlers[propertyKey]) === null || _b === void 0 ? void 0 : _b.forEach(handler => handler(previousValue));
+                    (_b = (_a = objectStateMap.get(object)) === null || _a === undefined ? undefined : _a.stateChangeHandlers[propertyKey]) === null || _b === undefined ? undefined : _b.forEach(handler => handler(previousValue));
                 }
             }
         });
