@@ -283,7 +283,7 @@ class ExceptionRenderer {
             const httpStatusConstant = ExceptionRenderer.getStatusConstant(status);
             const httpStatus = httpStatusCodes[httpStatusConstant];
             const customView = ExceptionRenderer.customViewMappings[httpStatusConstant];
-            App.title = httpStatus.text;
+            Elox.title = httpStatus.text;
             document.title = httpStatus.text;
             if (customView) {
                 yield this.renderCustomView(customView, { status: Object.assign({}, httpStatus), data });
@@ -309,7 +309,7 @@ class ExceptionRenderer {
     }
     static renderCustomView(customView, data) {
         return __awaiter$3(this, undefined, undefined, function* () {
-            const errorViewDirectoryPath = App.config.directoryPaths.errorViewDirectory;
+            const errorViewDirectoryPath = Elox.config.directoryPaths.errorViewDirectory;
             const normalizedErrorViewPath = (!errorViewDirectoryPath || errorViewDirectoryPath === '/')
                 ? ''
                 : (errorViewDirectoryPath.endsWith('/') ? errorViewDirectoryPath : `${errorViewDirectoryPath}/`);
@@ -1062,7 +1062,7 @@ var path = /*#__PURE__*/Object.freeze({
 
 let activeTheme = appConfig.themeList[0];
 let themeSetInLocalStorage = window.localStorage.getItem('theme');
-const App = new class App extends EventManager {
+const Elox = new class Elox extends EventManager {
     constructor() {
         var _a, _b;
         super();
@@ -1104,4 +1104,4 @@ const App = new class App extends EventManager {
     }
 };
 
-export { EventManager, ExceptionRenderer, Link, Router, stateNavigator as StateNavigator, App as default, path };
+export { EventManager, ExceptionRenderer, Link, Router, stateNavigator as StateNavigator, Elox as default, path };
