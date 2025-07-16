@@ -13,7 +13,7 @@ let themeSetInLocalStorage = window.localStorage.getItem('theme') as typeof appC
  * The main application class, extending EventManager to handle app-wide events.
  * Manages configuration, themes, and document title updates.
  */
-const App = new class App extends EventManager {
+const Elox = new class Elox extends EventManager {
     config = appConfig;
     public csrfToken:string = (document.querySelector('meta[name="csrf-token"]')! as HTMLElement)?.getAttribute?.('content')||'';
 
@@ -78,7 +78,7 @@ const App = new class App extends EventManager {
  * Extends the App interface to support event handling methods
  * for managing custom application events.
  */
-interface App {
+interface Elox {
     addEventListener<EventType extends keyof AppEventMap>(eventType: EventType, listener: (event: AppEventMap[EventType]) => void): void;
     removeEventListener<EventType extends keyof AppEventMap>(eventType: EventType, listener: (event: AppEventMap[EventType]) => void): void;
     dispatchEvent<EventType extends keyof AppEventMap>(eventType: EventType, event?:AppEventMap[EventType]) : void;
@@ -87,7 +87,7 @@ interface App {
 export * from "./router/router";
 export * as path from "./utils/path";
 export {
-    App as default,
+    Elox as default,
     EventManager,
     Router,
     ExceptionRenderer,
