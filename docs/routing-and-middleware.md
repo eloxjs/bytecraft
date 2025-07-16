@@ -1,10 +1,10 @@
-# Routing & Middleware in ByteCraft
+# Routing & Middleware in Elox.js
 
 ## Routing
 
 ### Basic Routing
 ```js
-import { Router } from "bytecraft";
+import { Router } from "elox";
 
 Router.add(
     "/login", // URI
@@ -37,7 +37,7 @@ Router.add('/login', 'login-controller')
 
 ### Dynamically Loaded Controller Files
 ```js
-import App, { Router } from "bytecraft";
+import App, { Router } from "elox";
 
 // Set controllers directory path
 App.config.directoryPaths.controllerDirectory = '/app/controllers';
@@ -177,7 +177,7 @@ Router.middleware([middlewares], () => {
 
 ### Middleware Files
 ```js
-import App, { Router } from "bytecraft";
+import App, { Router } from "elox";
 
 // Set middleware directory path
 App.config.directoryPaths.middlewareDirectory = '/app/middlewares';
@@ -194,7 +194,7 @@ export default async function AuthMiddleware(request, next) {
 ```
 
 ### Fetch Page Data Middleware
-If enabled, ByteCraft will fetch page data via a POST request to `request.url` and append it to `request.pagedata`. The response must be in JSON format.
+If enabled, Elox.js will fetch page data via a POST request to `request.url` and append it to `request.pagedata`. The response must be in JSON format.
 ```js
 Router.defaultFetchPageData = true;
 ```

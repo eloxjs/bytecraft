@@ -14,7 +14,7 @@
 ### **How to Use:**
 
 ```js
-import { useObject } from "bytecraft/hooks";
+import { useObject } from "elox/hooks";
 
 // Define an object with stateful properties
 const user = {
@@ -57,7 +57,7 @@ user.age = 26;       // Logs: Age changed to: 26
 ### **How to Use:**
 
 ```js
-import { useArray } from "bytecraft/hooks";
+import { useArray } from "elox/hooks";
 
 // Define an array with some items
 const items = ["apple", "banana", "cherry"];
@@ -85,4 +85,4 @@ items.splice(1, 1);    // Logs: Item removed
 
 ---
 
-This `README.md` covers the basics of both `useObject` and `useArray`, their features, and how to use them within the ByteCraft framework. Let me know if you'd like any adjustments!
+This `README.md` covers the basics of both `useObject` and `useArray`, their features, and how to use them within the Elox.js framework. Let me know if you'd like any adjustments!

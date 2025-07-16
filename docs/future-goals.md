@@ -26,7 +26,7 @@
    - Simplify the integration of UI components within the framework, making it more developer-friendly.
 
 ## 7. **Mobile-First and Responsive Design**
-   - Enhance ByteCraft's capabilities to build mobile-first, responsive, and adaptive websites.
+   - Enhance Elox.js's capabilities to build mobile-first, responsive, and adaptive websites.
    - Ensure the framework offers tools and templates that make developing for various screen sizes and devices easy.
 
 ## 8. **Improved Routing with Event Listeners**
