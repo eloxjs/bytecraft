@@ -1,5 +1,5 @@
-# ByteCraft
-**ByteCraft** is a modern JavaScript framework for building Single-Page and Multi-Page Applications with DOM. It follows the MVC architecture and provides powerful features like routing, middleware support, reactive hooks, and a built-in template engine.
+# eloxjs/core
+**Elox.js** is a modern JavaScript framework for building Single-Page and Multi-Page Applications with DOM. It follows the MVC architecture and provides powerful features like routing, middleware support, reactive hooks, and a built-in template engine.
 
 ## 🚀 Features
 - **MVC-based architecture** - Organize your application efficiently.
@@ -15,16 +15,16 @@ For detailed explanations, check the [documentation](docs/readme.md).
 
 ## 📦 Installation
 
-Install **ByteCraft** using npm:
+Install **Elox.js** using npm:
 
 ```sh
-npm install git+https://github.com/ByteCraftJS/bytecraft.git
+npm install git+https://github.com/eloxjs/core.git
 ```
 
 ## ⚡ Quick Start
 ```js
-import App, { Router } from "bytecraft"
-import {Anchor} from "bytecraft/dom"
+import App, { Router } from "elox"
+import {Anchor} from "elox/dom"
 
 App.name = 'Your App Name';
 

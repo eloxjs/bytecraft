@@ -1,7 +1,7 @@
 # Template Engine
 
 ## Overview
-The `TemplateEngine` class in ByteCraft is responsible for processing template strings and objects by resolving placeholders with dynamic data. It supports custom delimiters, evaluates JavaScript expressions within templates, and allows reactive data binding within objects.
+The `TemplateEngine` class in Elox.js is responsible for processing template strings and objects by resolving placeholders with dynamic data. It supports custom delimiters, evaluates JavaScript expressions within templates, and allows reactive data binding within objects.
 
 ## Features
 - **String Interpolation**: Replace placeholders within strings with actual data values.
@@ -12,11 +12,11 @@ The `TemplateEngine` class in ByteCraft is responsible for processing template s
 ## Usage
 ### Basic String Interpolation
 ```ts
-import TemplateEngine from "bytecraft/template-engine";
-import {Router, path} from "bytecraft"
+import TemplateEngine from "elox/template-engine";
+import {Router, path} from "elox"
 
 const data = {
-    variables: { name: "ByteCraft", year: 2025 },
+    variables: { name: "Elox.js", year: 2025 },
     "@": {
         hasRoute: Router.hasRoute,
         route: Router.route,
@@ -26,7 +26,7 @@ const data = {
 const template = new TemplateEngine(data);
 
 console.log(template.resolve("Welcome to {{ name }} in {{ year }}!"));
-// Output: "Welcome to ByteCraft in 2025!"
+// Output: "Welcome to Elox.js in 2025!"
 
 console.log(template.resolve("{{ @hasRoute('login') ? @route('login') : null }}"));
 // Output: "http://localhost:3000/login" or `null`

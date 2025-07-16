@@ -1,6 +1,6 @@
-# ByteCraft DOM Module
+# Elox.js DOM Module
 
-The `bytecraft/dom` module provides utility functions for creating and manipulating DOM elements easily. It simplifies element creation with a declarative approach, allowing developers to build UI components programmatically.
+The `elox/dom` module provides utility functions for creating and manipulating DOM elements easily. It simplifies element creation with a declarative approach, allowing developers to build UI components programmatically.
 
 ## Features
 
@@ -16,9 +16,9 @@ The `bytecraft/dom` module provides utility functions for creating and manipulat
 ### Creating Elements
 
 ```js
-import { Div, H1, Span, Img } from "bytecraft/dom";
+import { Div, H1, Span, Img } from "elox/dom";
 
-const title = H1({ text: "Welcome to ByteCraft" });
+const title = H1({ text: "Welcome to elox" });
 const content = Div(".content", { text: "This is a dynamically created div." });
 const image = Img({ src: "image.jpg", fallbackSrc: "fallback.jpg" });
 
@@ -154,7 +154,7 @@ append(
 #### **2. `setAttribute` & `applyStyle` Function**
 
 ```js
-import { setAttribute, applyStyle, Div } from "bytecraft/dom";
+import { setAttribute, applyStyle, Div } from "elox/dom";
 
 const box = Div(".box");
 setAttribute(box, { "data-type": "container" });
@@ -224,4 +224,4 @@ document.body.append(container); // append(document.body, container)
 
 ## Conclusion
 
-`bytecraft/dom` provides an intuitive API for creating and managing DOM elements in JavaScript. It streamlines UI development and enhances code readability by offering a declarative syntax. Try it out and simplify your frontend workflow!
+`elox/dom` provides an intuitive API for creating and managing DOM elements in JavaScript. It streamlines UI development and enhances code readability by offering a declarative syntax. Try it out and simplify your frontend workflow!
