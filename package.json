@@ -1,5 +1,5 @@
 {
-  "name": "bytecraft",
+  "name": "elox",
   "version": "1.0.0",
   "description": "A modern JavaScript framework for building SPAs and MPAs with MVC architecture.",
   "main": "./cjs/index.cjs",
